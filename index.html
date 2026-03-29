@@ -150,17 +150,44 @@ body{font-family:'Nanum Gothic',sans-serif;background:var(--gray-bg);color:var(-
 .badge-low{background:rgba(239,159,39,0.92);color:#fff;}
 .badge-dup{background:rgba(210,74,74,0.92);color:#fff;}
 
-/* ── Lightbox date edit ── */
-.lightbox-date-row{position:absolute;bottom:calc(40px + env(safe-area-inset-bottom));left:0;right:0;display:flex;align-items:center;justify-content:center;gap:8px;}
-.lightbox-date-input{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.4);border-radius:8px;color:white;font-size:14px;font-family:'Nanum Gothic',sans-serif;padding:6px 10px;outline:none;width:140px;text-align:center;}
-.lightbox-date-input:focus{background:rgba(255,255,255,0.25);}
-.lightbox-date-save{background:var(--mint);border:none;border-radius:8px;color:white;font-size:13px;font-weight:700;font-family:'Nanum Gothic',sans-serif;padding:6px 12px;cursor:pointer;}
-
-/* ── Lightbox ── */position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:2000;align-items:center;justify-content:center;padding:16px;}
+/* ── Lightbox — mobile: fullscreen / PC: centered popup ── */
+.lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:2000;align-items:center;justify-content:center;}
 .lightbox.show{display:flex;}
-.lightbox-img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;}
-.lightbox-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:44px;height:44px;color:white;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-.lightbox-info{position:absolute;bottom:calc(16px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;color:rgba(255,255,255,0.7);font-size:13px;}
+
+/* PC: 팝업 스타일 */
+.lightbox-popup{
+  position:relative;
+  background:#111;
+  border-radius:16px;
+  overflow:hidden;
+  max-width:min(90vw, 860px);
+  max-height:90vh;
+  display:flex;
+  flex-direction:column;
+  box-shadow:0 8px 40px rgba(0,0,0,0.6);
+}
+.lightbox-popup-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;background:rgba(255,255,255,0.06);
+  border-bottom:1px solid rgba(255,255,255,0.1);flex-shrink:0;
+}
+.lightbox-popup-title{color:rgba(255,255,255,0.8);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px;}
+.lightbox-popup-close{background:rgba(255,255,255,0.12);border:none;border-radius:8px;width:36px;height:36px;color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.lightbox-popup-close:hover{background:rgba(255,255,255,0.22);}
+.lightbox-popup-body{overflow:auto;display:flex;align-items:center;justify-content:center;padding:12px;flex:1;}
+.lightbox-popup-body img{max-width:100%;max-height:calc(90vh - 120px);object-fit:contain;border-radius:6px;display:block;}
+
+/* Mobile: 전체화면 스타일 */
+.lightbox-mobile{display:none;position:fixed;inset:0;background:#000;z-index:2000;flex-direction:column;
+  /* iOS 키보드가 올라와도 레이아웃 유지 */
+  height:100%;height:-webkit-fill-available;}
+.lightbox-mobile.show{display:flex;}
+.lightbox-mobile-header{display:flex;align-items:center;gap:12px;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top));background:rgba(0,0,0,0.7);flex-shrink:0;}
+.lightbox-mobile-back{background:rgba(255,255,255,0.12);border:none;border-radius:10px;padding:8px 16px;color:white;font-size:14px;font-weight:700;font-family:'Nanum Gothic',sans-serif;cursor:pointer;display:flex;align-items:center;gap:6px;}
+.lightbox-mobile-title{color:rgba(255,255,255,0.75);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+.lightbox-mobile-body{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:8px;}
+.lightbox-mobile-body img{max-width:100%;max-height:100%;object-fit:contain;display:block;}
+.lightbox-mobile-info{padding:10px 16px;padding-bottom:calc(10px + env(safe-area-inset-bottom));text-align:center;color:rgba(255,255,255,0.55);font-size:12px;flex-shrink:0;}
 
 /* ── Toast ── */
 .toast{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:white;border-radius:100px;padding:12px 22px;font-size:14px;font-weight:700;z-index:9999;transition:transform 0.3s;pointer-events:none;white-space:nowrap;}
@@ -326,15 +353,54 @@ body{font-family:'Nanum Gothic',sans-serif;background:var(--gray-bg);color:var(-
   </div>
 </div>
 
-<!-- Lightbox -->
+<!-- Lightbox: PC 팝업 -->
 <div class="lightbox" id="lightbox" onclick="handleLightboxClick(event)">
-  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
-  <img class="lightbox-img" id="lightbox-img" src="" alt="">
-  <div class="lightbox-date-row">
-    <input class="lightbox-date-input" id="lightbox-date-input" type="text" placeholder="YYYY.MM.DD">
-    <button class="lightbox-date-save" onclick="saveLightboxDate()">날짜 저장</button>
+  <div class="lightbox-popup">
+    <div class="lightbox-popup-header">
+      <div style="flex:1;min-width:0;">
+        <input id="lightbox-name-input"
+          style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);border-radius:6px;
+                 color:white;font-size:14px;font-weight:700;font-family:'Nanum Gothic',sans-serif;
+                 padding:5px 10px;outline:none;width:100%;min-width:0;"
+          placeholder="파일명 입력">
+        <div id="lightbox-sub" style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:4px;padding-left:2px;"></div>
+      </div>
+      <button id="lightbox-name-save"
+        style="flex-shrink:0;background:var(--mint);border:none;border-radius:8px;color:white;
+               font-size:13px;font-weight:700;font-family:'Nanum Gothic',sans-serif;
+               padding:6px 14px;cursor:pointer;margin:0 8px;white-space:nowrap;">
+        저장
+      </button>
+      <button class="lightbox-popup-close" onclick="closeLightbox()">✕</button>
+    </div>
+    <div class="lightbox-popup-body">
+      <img id="lightbox-img" src="" alt="">
+    </div>
   </div>
-  <div class="lightbox-info" id="lightbox-info"></div>
+</div>
+
+<!-- Lightbox: 모바일 전체화면 -->
+<div class="lightbox-mobile" id="lightbox-mobile">
+  <div class="lightbox-mobile-header">
+    <button class="lightbox-mobile-back" onclick="closeLightbox()">← 뒤로</button>
+    <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;">
+      <input id="lightbox-mobile-name-input"
+        style="flex:1;min-width:0;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);
+               border-radius:6px;color:white;font-size:14px;font-family:'Nanum Gothic',sans-serif;
+               padding:6px 10px;outline:none;"
+        placeholder="파일명">
+      <button id="lightbox-mobile-name-save"
+        style="flex-shrink:0;background:var(--mint);border:none;border-radius:8px;color:white;
+               font-size:13px;font-weight:700;font-family:'Nanum Gothic',sans-serif;
+               padding:6px 12px;cursor:pointer;min-height:36px;">
+        저장
+      </button>
+    </div>
+  </div>
+  <div class="lightbox-mobile-body">
+    <img id="lightbox-mobile-img" src="" alt="">
+  </div>
+  <div class="lightbox-mobile-info" id="lightbox-mobile-info"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -471,7 +537,7 @@ function handleFiles(files) {
   if (!newFiles.length) { showToast('이미지 파일을 선택해주세요'); return; }
   uploadedFiles = [...uploadedFiles, ...newFiles];
   // photoMeta 초기화 (새 파일 추가분)
-  newFiles.forEach(f => photoMeta.push({ date: null, confidence: null }));
+  newFiles.forEach(f => photoMeta.push({ date: null, confidence: null, customName: null }));
   detectDuplicates();
   renderPreviewGrid();
   document.getElementById('upload-preview').classList.remove('hidden');
@@ -532,6 +598,8 @@ async function startAI() {
     setProgress(20, '모델 준비 완료! 분석 시작...', '');
 
     faceResults = [];
+    // confidence 초기화 (재시도 시 이전 값 제거)
+    photoMeta.forEach(m => { if(m) m.confidence = null; });
     const total = uploadedFiles.length;
     for (let i = 0; i < total; i++) {
       setProgress(20 + Math.round((i/total)*60), `얼굴 분석 중 (${i+1}/${total})`, uploadedFiles[i].name);
@@ -681,7 +749,7 @@ function renderGrid(container, indices, sourceId) {
     const img=document.createElement('img'); img.src=getUrl(idx);
     const mb=document.createElement('button'); mb.className='move-btn'; mb.textContent='↗'; mb.title='이동';
     mb.onclick=e=>{ e.stopPropagation(); openMoveModal(sourceId,idx); };
-    div.onclick=e=>{ if(e.target===mb) return; openLightbox(idx); };
+    div.onclick=e=>{ if(e.target.closest('.move-btn')) return; openLightbox(idx); };
     div.appendChild(img); div.appendChild(mb);
 
     // 중복 뱃지
@@ -761,37 +829,78 @@ let lightboxCurrentIdx = null;
 function openLightbox(photoIdx) {
   const file = uploadedFiles[photoIdx]; if(!file) return;
   lightboxCurrentIdx = photoIdx;
-  document.getElementById('lightbox-img').src = getUrl(photoIdx);
-  const currentDate = photoMeta[photoIdx]?.date || getFileDate(file);
-  document.getElementById('lightbox-date-input').value = currentDate;
-  const conf = photoMeta[photoIdx]?.confidence;
-  const confTxt = conf !== null && conf !== undefined ? `  ·  정확도 ${Math.round(conf*100)}%` : '';
-  const dupTxt  = dupSet.has(photoIdx) ? '  ·  ⚠️ 복사본' : '';
-  document.getElementById('lightbox-info').textContent = `${file.name}${confTxt}${dupTxt}`;
-  document.getElementById('lightbox').classList.add('show');
+
+  const url      = getUrl(photoIdx);
+  const dispName = photoMeta[photoIdx]?.customName || file.name;
+  const conf     = photoMeta[photoIdx]?.confidence;
+  const confTxt  = conf !== null && conf !== undefined ? `정확도 ${Math.round(conf*100)}%` : '';
+  const dupTxt   = dupSet.has(photoIdx) ? ' · ⚠️ 복사본' : '';
+  const subTxt   = [getFileDate(file, photoIdx), confTxt].filter(Boolean).join(' · ') + dupTxt;
+
+  if (isMobile) {
+    document.getElementById('lightbox-mobile-img').src              = url;
+    document.getElementById('lightbox-mobile-name-input').value     = dispName;
+    document.getElementById('lightbox-mobile-info').textContent     = subTxt;
+    document.getElementById('lightbox-mobile').classList.add('show');
+  } else {
+    document.getElementById('lightbox-img').src              = url;
+    document.getElementById('lightbox-name-input').value     = dispName;
+    document.getElementById('lightbox-sub').textContent      = subTxt;
+    document.getElementById('lightbox').classList.add('show');
+  }
   document.body.style.overflow = 'hidden';
 }
-function saveLightboxDate() {
+
+function saveLightboxName() {
   if (lightboxCurrentIdx === null) return;
-  const val = document.getElementById('lightbox-date-input').value.trim();
-  // YYYY.MM.DD 또는 YYYY-MM-DD 허용
-  if (!/^\d{4}[.\-]\d{2}[.\-]\d{2}$/.test(val)) { showToast('날짜 형식: 2025.03.28'); return; }
-  const normalized = val.replace(/-/g, '.');
-  photoMeta[lightboxCurrentIdx].date = normalized;
-  showToast('날짜가 수정됐어요 ✅');
-  // 그룹 뷰 갱신 (날짜 섹션이 바뀔 수 있으므로)
-  renderAll();
+  const inputId = isMobile ? 'lightbox-mobile-name-input' : 'lightbox-name-input';
+  const val = document.getElementById(inputId).value.trim();
+  if (!val) { showToast('파일명을 입력해주세요'); return; }
+
+  // getFileName()과 동일한 기준으로 최종 파일명 생성 후 중복 확인
+  const thisFile = uploadedFiles[lightboxCurrentIdx];
+  const ext = thisFile?.name.includes('.') ? '.' + thisFile.name.split('.').pop() : '';
+  const thisFinalName = (val + ext).replace(/[^a-zA-Z0-9가-힣._-]/g, '_');
+
+  const isDup = uploadedFiles.some((f, i) => {
+    if (i === lightboxCurrentIdx || !f) return false;
+    return getFileName(f, i) === thisFinalName;
+  });
+
+  photoMeta[lightboxCurrentIdx].customName = val;
+
+  if (isDup) {
+    showToast(`⚠️ "${thisFinalName}" 이름이 중복돼요. ZIP 저장 시 자동으로 번호가 붙어요`);
+  } else {
+    showToast('파일명이 저장됐어요 ✅');
+  }
 }
+
 function closeLightbox() {
   document.getElementById('lightbox').classList.remove('show');
-  document.getElementById('lightbox-img').src = '';
+  document.getElementById('lightbox-mobile').classList.remove('show');
+  document.getElementById('lightbox-img').src              = '';
+  document.getElementById('lightbox-mobile-img').src       = '';
+  document.getElementById('lightbox-name-input').value     = '';
+  document.getElementById('lightbox-mobile-name-input').value = '';
   document.body.style.overflow = '';
   lightboxCurrentIdx = null;
 }
+
 function handleLightboxClick(e) {
-  // 이미지/버튼/입력 외 배경 클릭 시 닫기
   if (e.target === document.getElementById('lightbox')) closeLightbox();
 }
+
+// 저장 버튼 이벤트
+document.getElementById('lightbox-name-save').addEventListener('click', saveLightboxName);
+document.getElementById('lightbox-mobile-name-save').addEventListener('click', saveLightboxName);
+// Enter 키로도 저장
+['lightbox-name-input','lightbox-mobile-name-input'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); saveLightboxName(); }
+  });
+});
+
 document.addEventListener('keydown', e => { if(e.key==='Escape') closeLightbox(); });
 
 /* ═══════════════════
@@ -809,8 +918,27 @@ function showDownload() {
   ].filter(g=>g.photoIndices.length);
 
   allGroups.forEach((g,i)=>{
+    // 미리보기도 실제 ZIP과 동일한 중복 방지 로직 적용
+    const usedPaths = new Set(); // 이미 사용된 경로 추적
     const bd={};
-    g.photoIndices.forEach(idx=>{ const d=getFileDate(uploadedFiles[idx],idx); (bd[d]=bd[d]||[]).push(uploadedFiles[idx]?.name||''); });
+    g.photoIndices.forEach(idx=>{
+      const f=uploadedFiles[idx]; if(!f) return;
+      const d=getFileDate(f,idx);
+      const folder=`${g.label}/${d}`;
+      const baseName = getFileName(f,idx);
+      // 중복 번호 붙이기 시뮬레이션
+      const ext  = baseName.includes('.') ? '.' + baseName.split('.').pop() : '';
+      const base = ext ? baseName.slice(0, baseName.length - ext.length) : baseName;
+      let candidate = `${folder}/${baseName}`;
+      let n = 2;
+      while (usedPaths.has(candidate)) {
+        candidate = `${folder}/${base}_${n}${ext}`;
+        n++;
+      }
+      usedPaths.add(candidate);
+      const resolvedName = candidate.split('/').pop();
+      (bd[d]=bd[d]||[]).push(resolvedName);
+    });
 
     // 라벨을 HTML에 안전하게 삽입
     const safeLabel = g.label.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -864,6 +992,8 @@ function goBackToGroups() {
 }
 
 async function shareGroup(groupId, btn) {
+  if (isDownloading) return;
+  isDownloading = true;
   if (btn) { btn.disabled=true; btn.textContent='⏳ ZIP 만드는 중...'; }
 
   try {
@@ -875,7 +1005,8 @@ async function shareGroup(groupId, btn) {
 
     for (const idx of indices) {
       const f=uploadedFiles[idx]; if(!f) continue;
-      zip.file(`${label}/${getFileDate(f,idx)}/${f.name.replace(/[^a-zA-Z0-9가-힣._-]/g,'_')}`, await f.arrayBuffer());
+      const folder=`${label}/${getFileDate(f,idx)}`;
+      zip.file(resolveZipPath(zip,folder,getFileName(f,idx)), await f.arrayBuffer());
     }
     const blob = await zip.generateAsync({type:'blob'});
     const today = new Date().toLocaleDateString('ko-KR').replace(/\.\s?/g,'-').replace(/-$/,'');
@@ -895,9 +1026,14 @@ async function shareGroup(groupId, btn) {
     if (e.name!=='AbortError') showToast('오류: ' + e.message);
   }
   if (btn) { btn.disabled=false; btn.textContent='💬 카카오톡으로 공유'; }
+  isDownloading = false;
 }
 
+let isDownloading = false;
+
 async function downloadZip(mode, groupId) {
+  if (isDownloading) return;
+  isDownloading = true;
   let btn = mode==='all'
     ? document.querySelector('#section-download .btn-primary')
     : document.querySelector(`[data-gid="${groupId}"]`);
@@ -908,30 +1044,68 @@ async function downloadZip(mode, groupId) {
     if (mode==='all') {
       for (let gi=0;gi<groups.length;gi++) {
         const g=groups[gi]; const fn=g.name||`그룹${gi+1}`;
-        for (const idx of g.photoIndices) { const f=uploadedFiles[idx]; if(!f) continue; zip.file(`${fn}/${getFileDate(f,idx)}/${f.name.replace(/[^a-zA-Z0-9가-힣._-]/g,'_')}`,await f.arrayBuffer()); }
+        for (const idx of g.photoIndices) {
+          const f=uploadedFiles[idx]; if(!f) continue;
+          const folder=`${fn}/${getFileDate(f,idx)}`;
+          const path=resolveZipPath(zip,folder,getFileName(f,idx));
+          zip.file(path, await f.arrayBuffer());
+        }
       }
-      for (const idx of unassigned) { const f=uploadedFiles[idx]; if(!f) continue; zip.file(`미분류/${getFileDate(f,idx)}/${f.name.replace(/[^a-zA-Z0-9가-힣._-]/g,'_')}`,await f.arrayBuffer()); }
+      for (const idx of unassigned) {
+        const f=uploadedFiles[idx]; if(!f) continue;
+        const folder=`미분류/${getFileDate(f,idx)}`;
+        const path=resolveZipPath(zip,folder,getFileName(f,idx));
+        zip.file(path, await f.arrayBuffer());
+      }
       triggerDownload(await zip.generateAsync({type:'blob'}),`어린이집_사진_전체_${today}.zip`);
     } else {
       let indices,label;
       if(groupId==='unassigned'){indices=unassigned;label='미분류';}
       else{const g=groups.find(g=>g.id===groupId);indices=g?.photoIndices||[];label=g?.name||groupId;}
-      for(const idx of indices){const f=uploadedFiles[idx];if(!f) continue;zip.file(`${label}/${getFileDate(f,idx)}/${f.name.replace(/[^a-zA-Z0-9가-힣._-]/g,'_')}`,await f.arrayBuffer());}
+      for(const idx of indices){
+        const f=uploadedFiles[idx]; if(!f) continue;
+        const folder=`${label}/${getFileDate(f,idx)}`;
+        const path=resolveZipPath(zip,folder,getFileName(f,idx));
+        zip.file(path, await f.arrayBuffer());
+      }
       triggerDownload(await zip.generateAsync({type:'blob'}),`${label}_사진_${today}.zip`);
     }
     showToast('다운로드 완료! 🎉');
   } catch(e) { showToast('오류: '+e.message); }
   if(btn){btn.disabled=false;btn.textContent=mode==='all'?'⬇️ 전체 ZIP':'⬇️ ZIP';}
+  isDownloading = false;
 }
 
 function triggerDownload(blob, filename) {
-  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(blob),download:filename});
-  a.click(); URL.revokeObjectURL(a.href);
+  const url = URL.createObjectURL(blob);
+  const a = Object.assign(document.createElement('a'), { href: url, download: filename });
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
 /* ═══════════════════
    Utils
 ═══════════════════ */
+function getFileName(file, idx) {
+  const custom = photoMeta[idx]?.customName?.trim();
+  if (!custom) return file.name.replace(/[^a-zA-Z0-9가-힣._-]/g, '_');
+  const ext = file.name.includes('.') ? '.' + file.name.split('.').pop() : '';
+  return (custom + ext).replace(/[^a-zA-Z0-9가-힣._-]/g, '_');
+}
+
+// ZIP 내 같은 경로 중복 방지 — 동일 폴더에 같은 이름 있으면 _2, _3 ... 붙임
+function resolveZipPath(zip, folderPath, fileName) {
+  const ext      = fileName.includes('.') ? '.' + fileName.split('.').pop() : '';
+  const base     = ext ? fileName.slice(0, fileName.length - ext.length) : fileName;
+  const fullPath = `${folderPath}/${fileName}`;
+  if (!zip.files[fullPath]) return fullPath;
+  let n = 2;
+  while (zip.files[`${folderPath}/${base}_${n}${ext}`]) n++;
+  return `${folderPath}/${base}_${n}${ext}`;
+}
+
 function getFileDate(file, idx) {
   // 수동으로 날짜가 지정된 경우 우선 사용
   if (idx !== undefined && photoMeta[idx]?.date) return photoMeta[idx].date;
