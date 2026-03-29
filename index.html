@@ -2,7 +2,9 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>사진 분류기 - 어린이집 선생님용</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
@@ -15,138 +17,151 @@
   --radius:16px; --radius-sm:10px;
   --shadow:0 2px 12px rgba(15,110,86,0.08);
   --shadow-md:0 4px 24px rgba(15,110,86,0.12);
+  --tap-size:48px;
 }
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Nanum Gothic',sans-serif;background:var(--gray-bg);color:var(--text);min-height:100vh;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Nanum Gothic',sans-serif;background:var(--gray-bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;}
 
-/* Header */
-.header{background:var(--white);border-bottom:1.5px solid var(--gray-border);padding:0 2rem;position:sticky;top:0;z-index:100;}
-.header-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px;}
-.logo{display:flex;align-items:center;gap:10px;font-family:'Gaegu',cursive;font-size:22px;font-weight:700;color:var(--mint-dark);}
-.logo-icon{width:36px;height:36px;background:var(--mint-light);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
-.free-badge{background:var(--mint-light);color:var(--mint-dark);border:1px solid var(--gray-border);border-radius:20px;padding:5px 14px;font-size:13px;font-weight:700;}
+/* ── Header ── */
+.header{background:var(--white);border-bottom:1.5px solid var(--gray-border);padding:0 1.25rem;position:sticky;top:0;z-index:100;}
+.header-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px;}
+.logo{display:flex;align-items:center;gap:8px;font-family:'Gaegu',cursive;font-size:20px;font-weight:700;color:var(--mint-dark);}
+.logo-icon{width:32px;height:32px;background:var(--mint-light);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.free-badge{background:var(--mint-light);color:var(--mint-dark);border:1px solid var(--gray-border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;}
 
-/* Main */
-.main{max-width:1100px;margin:0 auto;padding:2rem;}
+/* ── Main ── */
+.main{max-width:1100px;margin:0 auto;padding:1rem;}
 
-/* Steps */
-.steps{display:flex;margin-bottom:2rem;background:var(--white);border-radius:var(--radius);border:1.5px solid var(--gray-border);overflow:hidden;}
-.step{flex:1;padding:14px 12px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);border-right:1px solid var(--gray-border);transition:background 0.2s;}
+/* ── Steps: horizontal scrollable strip on mobile ── */
+.steps-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:1.25rem;scrollbar-width:none;}
+.steps-wrap::-webkit-scrollbar{display:none;}
+.steps{display:flex;background:var(--white);border-radius:var(--radius);border:1.5px solid var(--gray-border);overflow:hidden;min-width:max-content;width:100%;}
+.step{flex:1;min-width:80px;padding:12px 10px;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);border-right:1px solid var(--gray-border);white-space:nowrap;}
 .step:last-child{border-right:none;}
 .step.active{background:var(--mint-light);color:var(--mint-dark);font-weight:700;}
 .step.done{background:#F0FAF6;color:var(--mint-dark);}
-.step-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;background:var(--gray-border);color:var(--text-muted);flex-shrink:0;}
+.step-num{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;background:var(--gray-border);color:var(--text-muted);flex-shrink:0;}
 .step.active .step-num{background:var(--mint);color:white;}
 .step.done .step-num{background:var(--mint-dark);color:white;}
 
-/* Panels */
-.panel{background:var(--white);border:1.5px solid var(--gray-border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;}
-.panel-title{font-family:'Gaegu',cursive;font-size:20px;font-weight:700;color:var(--mint-dark);margin-bottom:4px;}
-.panel-sub{font-size:13px;color:var(--text-muted);margin-bottom:16px;}
+/* ── Panels ── */
+.panel{background:var(--white);border:1.5px solid var(--gray-border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1.25rem;}
+.panel-title{font-family:'Gaegu',cursive;font-size:19px;font-weight:700;color:var(--mint-dark);margin-bottom:4px;}
+.panel-sub{font-size:13px;color:var(--text-muted);margin-bottom:14px;line-height:1.5;}
 
-/* Notice */
-.notice{background:var(--amber-light);border:1.5px solid #FAC775;border-radius:var(--radius-sm);padding:14px 18px;font-size:14px;color:#633806;margin-bottom:1.5rem;display:flex;gap:10px;align-items:flex-start;line-height:1.6;}
+/* ── Notice ── */
+.notice{background:var(--amber-light);border:1.5px solid #FAC775;border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;color:#633806;margin-bottom:1.25rem;display:flex;gap:10px;align-items:flex-start;line-height:1.6;}
 
-/* Name tags */
-.name-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;min-height:34px;}
-.name-tag{display:flex;align-items:center;gap:6px;border-radius:20px;padding:5px 12px 5px 14px;font-size:14px;font-weight:700;color:white;}
-.name-tag-remove{background:rgba(255,255,255,0.3);border:none;border-radius:50%;width:18px;height:18px;cursor:pointer;color:white;font-size:11px;display:flex;align-items:center;justify-content:center;}
+/* ── Name tags ── */
+.name-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;min-height:38px;}
+.name-tag{display:flex;align-items:center;gap:6px;border-radius:20px;padding:7px 12px 7px 14px;font-size:14px;font-weight:700;color:white;}
+.name-tag-remove{background:rgba(255,255,255,0.3);border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;color:white;font-size:13px;display:flex;align-items:center;justify-content:center;}
 .name-input-row{display:flex;gap:8px;}
-.name-input{flex:1;border:1.5px solid var(--gray-border);border-radius:10px;padding:9px 14px;font-size:14px;font-family:'Nanum Gothic',sans-serif;outline:none;}
+.name-input{flex:1;border:1.5px solid var(--gray-border);border-radius:10px;padding:11px 14px;font-size:16px;font-family:'Nanum Gothic',sans-serif;outline:none;-webkit-appearance:none;}
 .name-input:focus{border-color:var(--mint);}
-.name-add-btn{background:var(--mint);color:white;border:none;border-radius:10px;padding:9px 18px;font-size:14px;font-weight:700;font-family:'Nanum Gothic',sans-serif;cursor:pointer;white-space:nowrap;}
-.name-add-btn:hover{background:var(--mint-dark);}
+.name-add-btn{background:var(--mint);color:white;border:none;border-radius:10px;padding:11px 18px;font-size:15px;font-weight:700;font-family:'Nanum Gothic',sans-serif;cursor:pointer;white-space:nowrap;min-width:var(--tap-size);}
 
-/* Upload */
-.upload-zone{background:var(--white);border:2.5px dashed var(--gray-border);border-radius:var(--radius);padding:3rem 2rem;text-align:center;transition:border-color 0.2s,background 0.2s;margin-bottom:1.5rem;}
+/* ── Upload zone ── */
+.upload-zone{background:var(--white);border:2.5px dashed var(--gray-border);border-radius:var(--radius);padding:2.5rem 1.5rem;text-align:center;transition:border-color 0.2s,background 0.2s;margin-bottom:1.25rem;}
 .upload-zone.dragover{border-color:var(--mint);background:var(--mint-light);}
-.upload-icon{font-size:48px;margin-bottom:12px;}
-.upload-title{font-family:'Gaegu',cursive;font-size:24px;font-weight:700;color:var(--mint-dark);margin-bottom:8px;}
-.upload-sub{font-size:14px;color:var(--text-muted);}
-.upload-btn{display:inline-block;margin-top:16px;background:var(--mint);color:white;border:none;border-radius:10px;padding:10px 24px;font-size:15px;font-family:'Nanum Gothic',sans-serif;font-weight:700;cursor:pointer;}
-.upload-btn:hover{background:var(--mint-dark);}
-.preview-count{background:var(--white);border:1.5px solid var(--gray-border);border-radius:var(--radius);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;}
+.upload-icon{font-size:44px;margin-bottom:10px;}
+.upload-title{font-family:'Gaegu',cursive;font-size:22px;font-weight:700;color:var(--mint-dark);margin-bottom:6px;}
+.upload-sub{font-size:13px;color:var(--text-muted);}
+.upload-btn{display:inline-block;margin-top:14px;background:var(--mint);color:white;border:none;border-radius:12px;padding:13px 28px;font-size:16px;font-family:'Nanum Gothic',sans-serif;font-weight:700;cursor:pointer;min-height:var(--tap-size);}
+
+/* ── Preview ── */
+.preview-count{background:var(--white);border:1.5px solid var(--gray-border);border-radius:var(--radius);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;gap:10px;}
 .count-text{font-size:15px;font-weight:700;}
-.count-sub{font-size:13px;color:var(--text-muted);}
-.preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-bottom:1.5rem;max-height:260px;overflow-y:auto;padding:4px;}
-.preview-thumb{aspect-ratio:1;border-radius:10px;overflow:hidden;border:2px solid var(--gray-border);}
+.count-sub{font-size:12px;color:var(--text-muted);}
+.preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-bottom:1.25rem;max-height:300px;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:2px;}
+.preview-thumb{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;border:2px solid var(--gray-border);}
 .preview-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.preview-thumb .remove-btn{position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,0.65);color:white;border:none;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 
-/* Buttons */
-.action-row{display:flex;gap:12px;margin-bottom:2rem;flex-wrap:wrap;}
-.btn-primary{background:var(--mint);color:white;border:none;border-radius:12px;padding:14px 28px;font-size:16px;font-weight:700;font-family:'Nanum Gothic',sans-serif;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background 0.2s,transform 0.1s;}
-.btn-primary:hover{background:var(--mint-dark);}
-.btn-primary:active{transform:scale(0.98);}
+/* ── Buttons ── */
+.action-row{display:flex;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap;}
+.btn-primary{background:var(--mint);color:white;border:none;border-radius:12px;padding:14px 22px;font-size:15px;font-weight:700;font-family:'Nanum Gothic',sans-serif;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background 0.2s;min-height:var(--tap-size);}
+.btn-primary:active{background:var(--mint-dark);}
 .btn-primary:disabled{background:#9DCCBE;cursor:not-allowed;}
-.btn-secondary{background:var(--white);color:var(--text);border:1.5px solid var(--gray-border);border-radius:12px;padding:14px 20px;font-size:15px;font-family:'Nanum Gothic',sans-serif;cursor:pointer;transition:background 0.2s;}
-.btn-secondary:hover{background:var(--gray-bg);}
+.btn-secondary{background:var(--white);color:var(--text);border:1.5px solid var(--gray-border);border-radius:12px;padding:14px 18px;font-size:15px;font-family:'Nanum Gothic',sans-serif;cursor:pointer;min-height:var(--tap-size);}
+.btn-secondary:active{background:var(--gray-bg);}
+.btn-full{width:100%;justify-content:center;}
 
-/* Progress */
-.progress-wrap{background:var(--white);border:1.5px solid var(--gray-border);border-radius:var(--radius);padding:2rem;text-align:center;}
-.progress-icon{font-size:48px;margin-bottom:16px;}
-.progress-title{font-family:'Gaegu',cursive;font-size:22px;font-weight:700;color:var(--mint-dark);margin-bottom:8px;}
+/* ── Progress ── */
+.progress-wrap{background:var(--white);border:1.5px solid var(--gray-border);border-radius:var(--radius);padding:2rem 1.5rem;text-align:center;}
+.progress-icon{font-size:44px;margin-bottom:14px;}
+.progress-title{font-family:'Gaegu',cursive;font-size:20px;font-weight:700;color:var(--mint-dark);margin-bottom:6px;}
 .progress-label{font-size:13px;color:var(--text-muted);margin-bottom:12px;}
 .progress-bar-bg{background:var(--gray-border);border-radius:100px;height:8px;overflow:hidden;margin-bottom:8px;}
 .progress-bar{height:100%;background:linear-gradient(90deg,var(--mint),var(--mint-dark));border-radius:100px;transition:width 0.4s;width:0%;}
 .progress-detail{font-size:12px;color:var(--text-muted);}
 
-/* Groups */
-.groups-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:12px;}
-.groups-title{font-family:'Gaegu',cursive;font-size:22px;font-weight:700;color:var(--mint-dark);}
-.group-card{background:var(--white);border:1.5px solid var(--gray-border);border-radius:var(--radius);margin-bottom:1.5rem;overflow:hidden;transition:box-shadow 0.2s,border-color 0.2s;}
-.group-card:hover{box-shadow:var(--shadow);}
+/* ── Groups ── */
+.groups-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:10px;}
+.groups-title{font-family:'Gaegu',cursive;font-size:20px;font-weight:700;color:var(--mint-dark);}
+.group-card{background:var(--white);border:1.5px solid var(--gray-border);border-radius:var(--radius);margin-bottom:1.25rem;overflow:hidden;transition:border-color 0.2s;}
 .group-card.drop-target{border-color:var(--mint);box-shadow:0 0 0 3px rgba(93,202,165,0.25);}
-.group-header{padding:16px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--gray-border);background:var(--mint-light);}
-.group-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Gaegu',cursive;font-size:18px;font-weight:700;color:white;flex-shrink:0;}
-.group-name-input{border:none;background:transparent;font-size:17px;font-weight:700;font-family:'Nanum Gothic',sans-serif;color:var(--mint-dark);outline:none;flex:1;min-width:120px;}
+.group-header{padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--gray-border);background:var(--mint-light);}
+.group-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Gaegu',cursive;font-size:17px;font-weight:700;color:white;flex-shrink:0;}
+.group-name-input{border:none;background:transparent;font-size:16px;font-weight:700;font-family:'Nanum Gothic',sans-serif;color:var(--mint-dark);outline:none;flex:1;min-width:100px;}
 .group-name-input::placeholder{color:var(--text-muted);}
-.group-meta{font-size:13px;color:var(--text-muted);}
-.date-section{padding:0 16px 8px;}
-.date-label{font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:12px 0 6px;}
-.group-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;}
-.empty-hint{padding:20px;color:var(--text-muted);font-size:13px;text-align:center;}
-.group-photo{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:2px solid transparent;cursor:grab;transition:border-color 0.2s,opacity 0.2s;}
-.group-photo:hover{border-color:var(--coral);}
-.group-photo.dragging{opacity:0.4;cursor:grabbing;}
+.group-meta{font-size:12px;color:var(--text-muted);}
+.date-section{padding:0 12px 8px;}
+.date-label{font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:10px 0 6px;}
+.group-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:6px;}
+.empty-hint{padding:18px;color:var(--text-muted);font-size:13px;text-align:center;}
+.group-photo{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:2px solid transparent;transition:border-color 0.15s;}
+.group-photo.selected{border-color:var(--mint);box-shadow:0 0 0 2px rgba(93,202,165,0.4);}
 .group-photo img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;}
-.move-btn{position:absolute;top:4px;right:4px;background:rgba(255,255,255,0.92);border:none;border-radius:6px;width:22px;height:22px;font-size:12px;cursor:pointer;display:none;align-items:center;justify-content:center;}
-.group-photo:hover .move-btn{display:flex;}
-/* confidence badge */
-.conf-badge{position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,0.55);color:white;font-size:10px;border-radius:4px;padding:2px 5px;pointer-events:none;}
-
-/* Face sample thumbnails in group header */
+/* move button — always visible on mobile, hover on desktop */
+.move-btn{position:absolute;top:4px;right:4px;background:rgba(255,255,255,0.92);border:none;border-radius:6px;width:26px;height:26px;font-size:13px;cursor:pointer;display:none;align-items:center;justify-content:center;}
+@media(hover:hover){.group-photo:hover .move-btn{display:flex;}}
+.is-mobile .move-btn{display:flex;}
 .face-samples{display:flex;gap:4px;margin-top:6px;}
-.face-sample{width:32px;height:32px;border-radius:50%;overflow:hidden;border:2px solid rgba(255,255,255,0.8);}
+.face-sample{width:30px;height:30px;border-radius:50%;overflow:hidden;border:2px solid rgba(255,255,255,0.8);}
 .face-sample img{width:100%;height:100%;object-fit:cover;display:block;}
 
-/* Modal */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;}
+/* ── Modal (bottom sheet on mobile) ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;align-items:flex-end;justify-content:center;}
 .modal-overlay.show{display:flex;}
-.modal{background:var(--white);border-radius:var(--radius);padding:1.5rem;width:90%;max-width:380px;box-shadow:var(--shadow-md);}
-.modal h3{font-size:17px;margin-bottom:12px;}
+.modal{background:var(--white);border-radius:20px 20px 0 0;padding:1.5rem 1.5rem calc(1.5rem + env(safe-area-inset-bottom));width:100%;max-width:520px;box-shadow:var(--shadow-md);max-height:80vh;overflow-y:auto;}
+.modal-handle{width:40px;height:4px;background:var(--gray-border);border-radius:2px;margin:0 auto 16px;}
+.modal h3{font-size:17px;margin-bottom:14px;}
 .move-options{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
-.move-option{padding:10px 14px;border:1.5px solid var(--gray-border);border-radius:10px;cursor:pointer;font-size:15px;font-family:'Nanum Gothic',sans-serif;background:var(--white);text-align:left;font-weight:700;color:var(--text);transition:background 0.15s;}
-.move-option:hover{background:var(--mint-light);border-color:var(--mint);}
-.btn-cancel-full{width:100%;background:var(--gray-bg);border:1px solid var(--gray-border);border-radius:8px;padding:10px;font-size:14px;cursor:pointer;font-family:'Nanum Gothic',sans-serif;}
+.move-option{padding:13px 16px;border:1.5px solid var(--gray-border);border-radius:12px;cursor:pointer;font-size:15px;font-family:'Nanum Gothic',sans-serif;background:var(--white);text-align:left;font-weight:700;color:var(--text);}
+.move-option:active{background:var(--mint-light);}
+.btn-cancel-full{width:100%;background:var(--gray-bg);border:1px solid var(--gray-border);border-radius:12px;padding:13px;font-size:15px;cursor:pointer;font-family:'Nanum Gothic',sans-serif;min-height:var(--tap-size);}
 
-/* Download */
-.download-section{background:var(--white);border:1.5px solid var(--gray-border);border-radius:var(--radius);padding:2rem;text-align:center;}
-.download-title{font-family:'Gaegu',cursive;font-size:22px;font-weight:700;color:var(--mint-dark);margin-bottom:8px;}
-.download-sub{font-size:14px;color:var(--text-muted);margin-bottom:20px;}
-.folder-preview{background:var(--gray-bg);border-radius:12px;padding:12px 16px;text-align:left;font-size:13px;font-family:monospace;color:var(--text-muted);line-height:2.2;}
+/* ── Download ── */
+.download-section{background:var(--white);border:1.5px solid var(--gray-border);border-radius:var(--radius);padding:1.5rem;}
+.download-title{font-family:'Gaegu',cursive;font-size:22px;font-weight:700;color:var(--mint-dark);margin-bottom:6px;text-align:center;}
+.download-sub{font-size:13px;color:var(--text-muted);margin-bottom:1.25rem;text-align:center;}
+.folder-preview{background:var(--gray-bg);border-radius:12px;padding:12px 14px;text-align:left;font-size:12px;font-family:monospace;color:var(--text-muted);line-height:2.2;}
 .f-folder{color:var(--mint-dark);font-weight:700;}
-.f-file{color:var(--text);margin-left:24px;}
+.f-file{color:var(--text);margin-left:20px;}
 
-/* Toast */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:white;border-radius:100px;padding:12px 24px;font-size:14px;font-weight:700;z-index:9999;transition:transform 0.3s;pointer-events:none;}
+/* ── iOS unzip guide ── */
+.ios-guide{background:var(--blue-light,#E6F1FB);border:1.5px solid #B5D4F4;border-radius:var(--radius-sm);padding:14px 16px;font-size:13px;color:#0C447C;margin-top:16px;line-height:1.7;}
+.ios-guide strong{font-weight:700;}
+.ios-guide ol{margin:6px 0 0 16px;}
+
+/* ── Kakao share btn ── */
+.btn-kakao{background:#FEE500;color:#3A1D1D;border:none;border-radius:12px;padding:14px 20px;font-size:15px;font-weight:700;font-family:'Nanum Gothic',sans-serif;cursor:pointer;display:flex;align-items:center;gap:8px;min-height:var(--tap-size);transition:opacity 0.2s;}
+.btn-kakao:active{opacity:0.85;}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:white;border-radius:100px;padding:12px 22px;font-size:14px;font-weight:700;z-index:9999;transition:transform 0.3s;pointer-events:none;white-space:nowrap;}
 .toast.show{transform:translateX(-50%) translateY(0);}
 .hidden{display:none!important;}
 
-@media(max-width:600px){
-  .main{padding:1rem;}
-  .steps{flex-direction:column;}
-  .step{border-right:none;border-bottom:1px solid var(--gray-border);}
-  .step:last-child{border-bottom:none;}
+@media(min-width:640px){
+  .main{padding:2rem;}
+  .upload-zone{padding:3rem 2rem;}
+  .modal-overlay{align-items:center;}
+  .modal{border-radius:var(--radius);max-width:400px;}
+  .modal-handle{display:none;}
+  .preview-thumb .remove-btn{display:none;}
+  .preview-thumb:hover .remove-btn{display:flex;}
 }
 </style>
 </head>
@@ -155,121 +170,139 @@ body{font-family:'Nanum Gothic',sans-serif;background:var(--gray-bg);color:var(-
 <div class="header">
   <div class="header-inner">
     <div class="logo"><div class="logo-icon">📸</div>사진 분류기</div>
-    <div class="free-badge">✅ 완전 무료 · 사진 외부 전송 없음</div>
+    <div class="free-badge">✅ 무료 · 외부전송 없음</div>
   </div>
 </div>
 
 <div class="main">
 
-  <div class="steps">
-    <div class="step active" id="step1"><div class="step-num" id="step1-num">1</div><span>이름 등록</span></div>
-    <div class="step" id="step2"><div class="step-num" id="step2-num">2</div><span>사진 올리기</span></div>
-    <div class="step" id="step3"><div class="step-num" id="step3-num">3</div><span>AI 분류</span></div>
-    <div class="step" id="step4"><div class="step-num" id="step4-num">4</div><span>수동 조정</span></div>
-    <div class="step" id="step5"><div class="step-num" id="step5-num">5</div><span>ZIP 저장</span></div>
+  <div class="steps-wrap">
+    <div class="steps">
+      <div class="step active" id="step1"><div class="step-num" id="step1-num">1</div><span>이름 등록</span></div>
+      <div class="step" id="step2"><div class="step-num" id="step2-num">2</div><span>사진 올리기</span></div>
+      <div class="step" id="step3"><div class="step-num" id="step3-num">3</div><span>AI 분류</span></div>
+      <div class="step" id="step4"><div class="step-num" id="step4-num">4</div><span>수동 조정</span></div>
+      <div class="step" id="step5"><div class="step-num" id="step5-num">5</div><span>저장</span></div>
+    </div>
   </div>
 
-  <!-- Step 1: Names -->
+  <!-- Step 1 -->
   <div id="section-names">
     <div class="notice">
-      <span style="font-size:18px;flex-shrink:0;">🤖</span>
-      <div>이름을 먼저 등록하면 AI가 얼굴을 분석해서 <strong>자동으로 아이별로 분류</strong>해줘요. 분류 후 수동 조정도 가능해요. 사진은 브라우저 밖으로 전송되지 않아요.</div>
+      <span style="font-size:17px;flex-shrink:0;">🤖</span>
+      <div>이름 등록 후 AI가 얼굴을 분석해 <strong>자동 분류</strong>해줘요. 사진은 기기 밖으로 전송되지 않아요.</div>
     </div>
     <div class="panel">
       <div class="panel-title">👶 우리 반 아이 이름 등록</div>
-      <div class="panel-sub">이름 순서대로 등록하면 AI 분류 후 각 이름별 폴더가 만들어져요</div>
+      <div class="panel-sub">이름을 추가하면 AI 분류 후 각 이름별 폴더가 생겨요</div>
       <div class="name-tags" id="name-tags"></div>
       <div class="name-input-row">
         <input class="name-input" id="name-input" placeholder="예: 김민준" maxlength="20" onkeydown="if(event.key==='Enter')addName()">
-        <button class="name-add-btn" onclick="addName()">+ 추가</button>
+        <button class="name-add-btn" onclick="addName()">추가</button>
       </div>
     </div>
     <div class="action-row">
-      <button class="btn-primary" id="goto-upload-btn" onclick="goToUpload()" disabled>다음 → 사진 올리기</button>
+      <button class="btn-primary btn-full" id="goto-upload-btn" onclick="goToUpload()" disabled>다음 → 사진 올리기</button>
     </div>
   </div>
 
-  <!-- Step 2: Upload -->
+  <!-- Step 2 -->
   <div id="section-upload" class="hidden">
     <div class="upload-zone" id="drop-zone">
       <div class="upload-icon">🌈</div>
-      <div class="upload-title">사진을 끌어다 놓으세요</div>
-      <div class="upload-sub">JPG, PNG, HEIC 지원 · 여러 장 한 번에 가능</div>
-      <button class="upload-btn" id="file-select-btn">📂 파일 선택하기</button>
+      <div class="upload-title">사진을 선택하세요</div>
+      <div class="upload-sub">JPG · PNG · HEIC · 여러 장 가능</div>
+      <button class="upload-btn" id="file-select-btn">📂 사진 선택하기</button>
       <input type="file" id="file-input" accept="image/*" multiple style="display:none">
     </div>
     <div id="upload-preview" class="hidden">
       <div class="preview-count">
         <div>
           <div class="count-text" id="count-text">0장</div>
-          <div class="count-sub">AI가 얼굴을 분석해서 자동으로 아이별로 분류해드릴게요</div>
+          <div class="count-sub">AI가 얼굴 분석 후 자동 분류해요</div>
         </div>
-        <button class="btn-secondary" onclick="resetUpload()">다시 선택</button>
+        <button class="btn-secondary" onclick="resetUpload()" style="padding:10px 14px;font-size:14px;">전체 삭제</button>
       </div>
       <div class="preview-grid" id="preview-grid"></div>
       <div class="action-row">
         <button class="btn-secondary" onclick="backToNames()">← 이름 수정</button>
-        <button class="btn-primary" onclick="startAI()">🤖 AI 얼굴 분류 시작</button>
+        <button class="btn-primary" style="flex:1;justify-content:center;" onclick="startAI()">🤖 AI 분류 시작</button>
       </div>
     </div>
   </div>
 
-  <!-- Step 3: AI Progress -->
+  <!-- Step 3 -->
   <div id="section-progress" class="hidden">
     <div class="progress-wrap">
       <div class="progress-icon">🤖</div>
-      <div class="progress-title" id="progress-title">얼굴 인식 모델 로딩 중...</div>
-      <div class="progress-label" id="progress-label">잠시만 기다려 주세요 (최초 1회만 다운로드)</div>
+      <div class="progress-title" id="progress-title">모델 로딩 중...</div>
+      <div class="progress-label" id="progress-label">최초 1회만 다운로드 (약 6MB)</div>
       <div class="progress-bar-bg"><div class="progress-bar" id="progress-bar"></div></div>
       <div class="progress-detail" id="progress-detail"></div>
     </div>
   </div>
 
-  <!-- Step 4: Groups (manual adjust) -->
+  <!-- Step 4 -->
   <div id="section-groups" class="hidden">
     <div class="groups-header">
       <div class="groups-title" id="groups-title">👶 분류 결과</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn-secondary" onclick="addGroupManual()">+ 그룹 추가</button>
-        <button class="btn-primary" onclick="showDownload()">📦 ZIP 저장하기</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-secondary" style="padding:10px 14px;font-size:14px;" onclick="addGroupManual()">+ 그룹</button>
+        <button class="btn-primary" onclick="showDownload()">📦 저장</button>
       </div>
     </div>
+    <div class="notice" style="font-size:13px;">
+      <span style="flex-shrink:0;">👆</span>
+      <div>사진의 <strong>↗ 버튼</strong>을 눌러 다른 그룹으로 이동할 수 있어요</div>
+    </div>
 
-    <!-- Unassigned pool -->
+    <!-- Unassigned -->
     <div class="group-card" id="unassigned-card" style="border-color:#FAC775;">
       <div class="group-header" style="background:var(--amber-light);">
         <div class="group-avatar" style="background:var(--amber);">?</div>
         <div style="flex:1">
-          <div style="font-size:17px;font-weight:700;color:#633806;">미분류 사진</div>
-          <div class="group-meta" id="unassigned-meta">분류되지 않은 사진이에요. 아래 그룹으로 드래그하세요.</div>
+          <div style="font-size:16px;font-weight:700;color:#633806;">미분류 사진</div>
+          <div class="group-meta" id="unassigned-meta">얼굴 미감지 또는 분류 불확실</div>
         </div>
       </div>
       <div class="date-section">
-        <div class="group-photos" id="unassigned-photos" style="padding:12px 0;min-height:40px;"></div>
+        <div class="group-photos" id="unassigned-photos" style="padding:10px 0;min-height:40px;"></div>
       </div>
     </div>
 
     <div id="groups-container"></div>
   </div>
 
-  <!-- Step 5: Download -->
+  <!-- Step 5 -->
   <div id="section-download" class="hidden">
     <div class="download-section">
       <div class="download-title">📦 저장 준비 완료!</div>
-      <div class="download-sub">전체를 한 번에 받거나, 아이별로 따로 받을 수 있어요</div>
-      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:24px;">
-        <button class="btn-secondary" onclick="goBackToGroups()">← 다시 수정</button>
-        <button class="btn-primary" onclick="downloadZip('all')">⬇️ 전체 ZIP 다운로드</button>
+      <div class="download-sub">전체 한 번에 또는 아이별로 따로 저장해요</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1.25rem;">
+        <button class="btn-secondary" style="flex:1;" onclick="goBackToGroups()">← 수정</button>
+        <button class="btn-primary" style="flex:2;justify-content:center;" onclick="downloadZip('all')">⬇️ 전체 ZIP</button>
       </div>
       <div id="per-group-download"></div>
+
+      <!-- iOS 압축해제 안내 -->
+      <div class="ios-guide" id="ios-guide">
+        <strong>📱 아이폰에서 ZIP 여는 법</strong>
+        <ol>
+          <li>위 버튼으로 ZIP 다운로드</li>
+          <li><strong>파일</strong> 앱 열기 → 다운로드 폴더</li>
+          <li>ZIP 파일 탭 → 자동으로 압축 해제돼요</li>
+          <li>폴더별로 사진이 정리된 걸 확인!</li>
+        </ol>
+      </div>
     </div>
   </div>
 
 </div>
 
-<!-- Move Modal -->
-<div class="modal-overlay" id="move-modal">
-  <div class="modal">
+<!-- Move Modal (bottom sheet) -->
+<div class="modal-overlay" id="move-modal" onclick="handleModalOverlayClick(event)">
+  <div class="modal" id="modal-inner">
+    <div class="modal-handle"></div>
     <h3>📁 다른 그룹으로 이동</h3>
     <div class="move-options" id="move-options"></div>
     <button class="btn-cancel-full" onclick="closeMoveModal()">취소</button>
@@ -278,25 +311,28 @@ body{font-family:'Nanum Gothic',sans-serif;background:var(--gray-bg);color:var(-
 
 <div class="toast" id="toast"></div>
 
-<!-- face-api.js -->
 <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 <script>
-/* ═══════════════════════════════════════
+/* ═══════════════════
    State
-═══════════════════════════════════════ */
+═══════════════════ */
 let childNames    = [];
 let uploadedFiles = [];
-let groups        = [];   // {id, name, color, photoIndices[], faceDescriptors[]}
+let groups        = [];
 let unassigned    = [];
 let dragInfo      = null;
-let faceResults   = [];   // per-photo: {idx, descriptor, confidence}
+let faceResults   = [];
 
 const COLORS = ['#5DCAA5','#F0997B','#378ADD','#7F77DD','#EF9F27','#D4537E','#639922','#E24B4A','#1D9E75','#BA7517'];
 const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
 
-/* ═══════════════════════════════════════
+// Detect mobile
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+if (isMobile) document.body.classList.add('is-mobile');
+
+/* ═══════════════════
    Step 1 — Names
-═══════════════════════════════════════ */
+═══════════════════ */
 function addName() {
   const inp = document.getElementById('name-input');
   const name = inp.value.trim();
@@ -305,7 +341,7 @@ function addName() {
   childNames.push(name);
   inp.value = '';
   renderNameTags();
-  inp.focus();
+  if (!isMobile) inp.focus();
 }
 function removeName(n) { childNames = childNames.filter(x => x !== n); renderNameTags(); }
 function renderNameTags() {
@@ -326,85 +362,77 @@ function backToNames() {
   document.getElementById('section-names').classList.remove('hidden');
 }
 
-/* ═══════════════════════════════════════
+/* ═══════════════════
    Step 2 — Upload
-═══════════════════════════════════════ */
+═══════════════════ */
 const dz  = document.getElementById('drop-zone');
 const fin = document.getElementById('file-input');
 const fsb = document.getElementById('file-select-btn');
 
+// Drag & drop (desktop)
 dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('dragover'); });
 dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
 dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
+
+// File select button — stopPropagation prevents double-open bug
 fsb.addEventListener('click', e => { e.stopPropagation(); fin.click(); });
-fin.addEventListener('change', () => { if (fin.files.length) handleFiles(fin.files); });
+fin.addEventListener('change', () => { if (fin.files.length) { handleFiles(fin.files); fin.value = ''; } });
 
 function handleFiles(files) {
-  uploadedFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
-  if (!uploadedFiles.length) { showToast('이미지 파일을 선택해주세요'); return; }
-  const grid = document.getElementById('preview-grid');
-  grid.innerHTML = '';
-  uploadedFiles.forEach(f => {
-    const d = document.createElement('div'); d.className = 'preview-thumb';
-    const img = document.createElement('img'); img.src = URL.createObjectURL(f);
-    d.appendChild(img); grid.appendChild(d);
-  });
-  document.getElementById('count-text').textContent = `${uploadedFiles.length}장 선택됨`;
+  const newFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+  if (!newFiles.length) { showToast('이미지 파일을 선택해주세요'); return; }
+  uploadedFiles = [...uploadedFiles, ...newFiles];
+  renderPreviewGrid();
   document.getElementById('upload-preview').classList.remove('hidden');
 }
+function renderPreviewGrid() {
+  const grid = document.getElementById('preview-grid');
+  grid.innerHTML = '';
+  uploadedFiles.forEach((f, i) => {
+    const d = document.createElement('div'); d.className = 'preview-thumb';
+    const img = document.createElement('img'); img.src = URL.createObjectURL(f);
+    const btn = document.createElement('button'); btn.className = 'remove-btn'; btn.textContent = '✕';
+    btn.onclick = e => { e.stopPropagation(); removeUploadedFile(i); };
+    d.appendChild(img); d.appendChild(btn); grid.appendChild(d);
+  });
+  document.getElementById('count-text').textContent = `${uploadedFiles.length}장 선택됨`;
+  if (!uploadedFiles.length) document.getElementById('upload-preview').classList.add('hidden');
+}
+function removeUploadedFile(idx) { uploadedFiles.splice(idx, 1); renderPreviewGrid(); }
 function resetUpload() {
   uploadedFiles = [];
   document.getElementById('upload-preview').classList.add('hidden');
-  document.getElementById('file-input').value = '';
+  fin.value = '';
 }
 
-/* ═══════════════════════════════════════
-   Step 3 — AI Face Detection & Clustering
-═══════════════════════════════════════ */
+/* ═══════════════════
+   Step 3 — AI
+═══════════════════ */
 async function startAI() {
   setStep(3);
   document.getElementById('section-upload').classList.add('hidden');
   document.getElementById('section-progress').classList.remove('hidden');
-
   try {
-    // 1. Load models
-    setProgress(5, '얼굴 인식 모델 로딩 중...', '최초 실행 시 약 6MB 다운로드 (이후 캐시됨)');
+    setProgress(5, '모델 로딩 중...', '최초 실행 시 약 6MB 다운로드');
     await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
     await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
     await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-    setProgress(20, '모델 로딩 완료! 얼굴 분석 시작...', '');
+    setProgress(20, '모델 준비 완료! 분석 시작...', '');
 
-    // 2. Detect faces in all photos
     faceResults = [];
     const total = uploadedFiles.length;
     for (let i = 0; i < total; i++) {
-      setProgress(20 + Math.round((i / total) * 60),
-        `얼굴 분석 중... (${i+1}/${total})`,
-        uploadedFiles[i].name);
-
+      setProgress(20 + Math.round((i/total)*60), `얼굴 분석 중 (${i+1}/${total})`, uploadedFiles[i].name);
       const img = await loadImage(uploadedFiles[i]);
       const detections = await faceapi
         .detectAllFaces(img, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.4 }))
-        .withFaceLandmarks()
-        .withFaceDescriptors();
-
-      detections.forEach(d => {
-        faceResults.push({
-          photoIdx: i,
-          descriptor: d.descriptor,
-          confidence: d.detection.score
-        });
-      });
+        .withFaceLandmarks().withFaceDescriptors();
+      detections.forEach(d => faceResults.push({ photoIdx:i, descriptor:d.descriptor, confidence:d.detection.score }));
     }
-
     setProgress(85, '얼굴 군집화 중...', `${faceResults.length}개 얼굴 발견`);
-
-    // 3. Cluster faces → groups
-    const grouped = clusterFaces(faceResults, childNames.length);
+    const clustered = clusterFaces(faceResults, childNames.length);
     setProgress(100, '분류 완료!', '');
-
-    setTimeout(() => buildGroups(grouped), 400);
-
+    setTimeout(() => buildGroups(clustered), 400);
   } catch(err) {
     console.error(err);
     document.getElementById('section-progress').classList.add('hidden');
@@ -413,318 +441,218 @@ async function startAI() {
     showToast('오류: ' + (err.message || '얼굴 인식 실패'));
   }
 }
-
 function loadImage(file) {
   return new Promise((res, rej) => {
-    const img = new Image();
-    img.onload = () => res(img);
-    img.onerror = rej;
+    const img = new Image(); img.onload = ()=>res(img); img.onerror = rej;
     img.src = URL.createObjectURL(file);
   });
 }
-
 function setProgress(pct, title, detail) {
   document.getElementById('progress-bar').style.width = pct + '%';
   document.getElementById('progress-title').textContent = title;
   document.getElementById('progress-detail').textContent = detail;
 }
-
-/* ── Face Clustering ──
-   Greedy nearest-neighbor: assign each face to the closest existing centroid.
-   If distance > threshold, start a new cluster.
-   After initial clustering, merge clusters exceeding the target count.
-*/
-function euclidean(a, b) {
-  let sum = 0;
-  for (let i = 0; i < a.length; i++) sum += (a[i]-b[i])**2;
-  return Math.sqrt(sum);
-}
-
+function euclidean(a,b){ let s=0; for(let i=0;i<a.length;i++) s+=(a[i]-b[i])**2; return Math.sqrt(s); }
 function clusterFaces(faces, targetCount) {
   if (!faces.length) return [];
-  const THRESHOLD = 0.5; // face-api recommended ~0.6; stricter = more clusters
-
-  const clusters = []; // [{centroid, faces:[{photoIdx,descriptor,confidence}]}]
-
+  const THRESHOLD = 0.5;
+  const clusters = [];
   for (const face of faces) {
-    let bestIdx = -1, bestDist = Infinity;
-    clusters.forEach((c, ci) => {
-      const d = euclidean(face.descriptor, c.centroid);
-      if (d < bestDist) { bestDist = d; bestIdx = ci; }
-    });
-
-    if (bestDist < THRESHOLD && bestIdx >= 0) {
+    let bestIdx=-1, bestDist=Infinity;
+    clusters.forEach((c,ci)=>{ const d=euclidean(face.descriptor,c.centroid); if(d<bestDist){bestDist=d;bestIdx=ci;} });
+    if (bestDist<THRESHOLD && bestIdx>=0) {
       clusters[bestIdx].faces.push(face);
-      // Update centroid (running average)
-      const n = clusters[bestIdx].faces.length;
-      clusters[bestIdx].centroid = clusters[bestIdx].centroid.map(
-        (v, i) => (v * (n-1) + face.descriptor[i]) / n
-      );
-    } else {
-      clusters.push({ centroid: Array.from(face.descriptor), faces: [face] });
-    }
+      const n=clusters[bestIdx].faces.length;
+      clusters[bestIdx].centroid=clusters[bestIdx].centroid.map((v,i)=>(v*(n-1)+face.descriptor[i])/n);
+    } else { clusters.push({centroid:Array.from(face.descriptor),faces:[face]}); }
   }
-
-  // Sort clusters by size descending
-  clusters.sort((a, b) => b.faces.length - a.faces.length);
-
-  // Merge smallest clusters until count matches targetCount (if we have more clusters than names)
-  while (clusters.length > targetCount && clusters.length > 1) {
-    // Merge last two smallest
-    const last = clusters.pop();
-    const secondLast = clusters[clusters.length - 1];
-    last.faces.forEach(f => secondLast.faces.push(f));
-    // Recompute centroid
-    const n = secondLast.faces.length;
-    secondLast.centroid = secondLast.centroid.map((_, ci) =>
-      secondLast.faces.reduce((s, f) => s + f.descriptor[ci], 0) / n
-    );
+  clusters.sort((a,b)=>b.faces.length-a.faces.length);
+  while (clusters.length>targetCount && clusters.length>1) {
+    const last=clusters.pop(), prev=clusters[clusters.length-1];
+    last.faces.forEach(f=>prev.faces.push(f));
+    const n=prev.faces.length;
+    prev.centroid=prev.centroid.map((_,ci)=>prev.faces.reduce((s,f)=>s+f.descriptor[ci],0)/n);
   }
-
   return clusters;
 }
-
 function buildGroups(clusters) {
-  // Create groups from registered names
-  groups = childNames.map((name, i) => ({
-    id: 'g' + i,
-    name,
-    color: COLORS[i % COLORS.length],
-    photoIndices: [],
-    centroid: clusters[i]?.centroid || null
-  }));
-
-  // Assign photos: each cluster → the matching name group (by order)
-  // For each detected face, assign its photo to the matching group
+  groups = childNames.map((name,i)=>({ id:'g'+i, name, color:COLORS[i%COLORS.length], photoIndices:[], centroid:clusters[i]?.centroid||null }));
   const assigned = new Set();
-  clusters.forEach((cluster, ci) => {
-    const g = groups[ci];
-    if (!g) return;
-    cluster.faces.forEach(face => {
-      if (!assigned.has(face.photoIdx)) {
-        g.photoIndices.push(face.photoIdx);
-        assigned.add(face.photoIdx);
-      }
-    });
+  clusters.forEach((cluster,ci)=>{
+    const g=groups[ci]; if(!g) return;
+    cluster.faces.forEach(face=>{ if(!assigned.has(face.photoIdx)){g.photoIndices.push(face.photoIdx);assigned.add(face.photoIdx);} });
   });
-
-  // Photos with no face detected → unassigned
-  unassigned = uploadedFiles
-    .map((_, i) => i)
-    .filter(i => !assigned.has(i));
-
-  // If more names than clusters, extra groups start empty
+  unassigned = uploadedFiles.map((_,i)=>i).filter(i=>!assigned.has(i));
   document.getElementById('section-progress').classList.add('hidden');
   document.getElementById('section-groups').classList.remove('hidden');
   setStep(4);
   renderAll();
-
-  const faceCount = faceResults.length;
-  const noFaceCount = unassigned.length;
-  showToast(`분류 완료! 얼굴 ${faceCount}개 인식 · 미분류 ${noFaceCount}장`);
+  showToast(`분류 완료! 얼굴 ${faceResults.length}개 · 미분류 ${unassigned.length}장`);
 }
 
-/* ═══════════════════════════════════════
-   Step 4 — Group Render & Manual Adjust
-═══════════════════════════════════════ */
-function renderAll() {
-  renderPool();
-  renderGroups();
-  updateTitle();
-}
+/* ═══════════════════
+   Step 4 — Groups
+═══════════════════ */
+function renderAll() { renderPool(); renderGroups(); updateTitle(); }
 
 function renderPool() {
   renderGrid(document.getElementById('unassigned-photos'), unassigned, 'unassigned');
   document.getElementById('unassigned-meta').textContent = unassigned.length
-    ? `${unassigned.length}장 · 얼굴이 감지되지 않았거나 분류가 불확실한 사진이에요`
+    ? `${unassigned.length}장 · ↗ 버튼으로 그룹에 이동하세요`
     : '모두 분류 완료 ✅';
 }
 
 function renderGroups() {
   const cont = document.getElementById('groups-container');
   cont.innerHTML = '';
-
-  groups.forEach((g, gi) => {
+  groups.forEach((g,gi)=>{
     const card = document.createElement('div');
-    card.className   = 'group-card';
-    card.dataset.gid = g.id;
-
-    const byDate = {};
-    g.photoIndices.forEach(idx => {
-      const d = getFileDate(uploadedFiles[idx]);
-      (byDate[d] = byDate[d] || []).push(idx);
-    });
-
+    card.className='group-card'; card.dataset.gid=g.id;
+    const byDate={};
+    g.photoIndices.forEach(idx=>{ const d=getFileDate(uploadedFiles[idx]); (byDate[d]=byDate[d]||[]).push(idx); });
     let body = g.photoIndices.length
-      ? Object.keys(byDate).sort().map(date => {
-          const gid = `gd_${g.id}_${date.replace(/\./g,'')}`;
+      ? Object.keys(byDate).sort().map(date=>{
+          const gid=`gd_${g.id}_${date.replace(/\./g,'')}`;
           return `<div class="date-section"><div class="date-label">${date}</div><div class="group-photos" id="${gid}"></div></div>`;
         }).join('')
-      : `<div class="empty-hint">여기로 드래그해 주세요</div>`;
-
-    // Sample face thumbs (first 3 photos)
-    const samples = g.photoIndices.slice(0, 3).map(idx => {
-      const url = URL.createObjectURL(uploadedFiles[idx]);
+      : `<div class="empty-hint">↗ 버튼으로 사진을 이동해 주세요</div>`;
+    const samples = g.photoIndices.slice(0,3).map(idx=>{
+      const url=URL.createObjectURL(uploadedFiles[idx]);
       return `<div class="face-sample"><img src="${url}"></div>`;
     }).join('');
-
-    card.innerHTML = `
+    card.innerHTML=`
       <div class="group-header">
         <div class="group-avatar" style="background:${g.color}">${gi+1}</div>
         <div style="flex:1">
-          <input class="group-name-input" placeholder="이름 입력" value="${g.name}"
-            onchange="groups[${gi}].name=this.value;updateTitle()">
+          <input class="group-name-input" placeholder="이름 입력" value="${g.name}" onchange="groups[${gi}].name=this.value;updateTitle()">
           <div class="group-meta">${g.photoIndices.length}장</div>
-          ${samples ? `<div class="face-samples">${samples}</div>` : ''}
+          ${samples?`<div class="face-samples">${samples}</div>`:''}
         </div>
-        <button onclick="removeGroup(${gi})" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-muted);padding:4px 8px;">✕</button>
+        <button onclick="removeGroup(${gi})" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-muted);padding:4px 8px;min-width:44px;min-height:44px;">✕</button>
       </div>${body}`;
-
     setupDrop(card, g.id);
     cont.appendChild(card);
-
-    Object.keys(byDate).sort().forEach(date => {
-      const el = card.querySelector(`#gd_${g.id}_${date.replace(/\./g,'')}`);
-      if (el) renderGrid(el, byDate[date], g.id);
+    Object.keys(byDate).sort().forEach(date=>{
+      const el=card.querySelector(`#gd_${g.id}_${date.replace(/\./g,'')}`);
+      if(el) renderGrid(el,byDate[date],g.id);
     });
   });
 }
 
 function renderGrid(container, indices, sourceId) {
-  container.innerHTML = '';
-  indices.forEach(idx => {
-    const file = uploadedFiles[idx]; if (!file) return;
-    const div  = document.createElement('div');
-    div.className        = 'group-photo';
-    div.draggable        = true;
-    div.dataset.photoIdx = idx;
-    div.dataset.src      = sourceId;
-
-    const img = document.createElement('img');
-    img.src = URL.createObjectURL(file);
-
-    const mb = document.createElement('button');
-    mb.className = 'move-btn'; mb.textContent = '↗'; mb.title = '이동';
-    mb.onclick = e => { e.stopPropagation(); openMoveModal(sourceId, idx); };
-
-    div.appendChild(img);
-    div.appendChild(mb);
-
-    div.addEventListener('dragstart', e => {
-      dragInfo = { sourceId, photoIdx: idx };
-      setTimeout(() => div.classList.add('dragging'), 0);
-      e.dataTransfer.effectAllowed = 'move';
-    });
-    div.addEventListener('dragend', () => div.classList.remove('dragging'));
+  container.innerHTML='';
+  indices.forEach(idx=>{
+    const file=uploadedFiles[idx]; if(!file) return;
+    const div=document.createElement('div');
+    div.className='group-photo'; div.draggable=!isMobile;
+    const img=document.createElement('img'); img.src=URL.createObjectURL(file);
+    const mb=document.createElement('button'); mb.className='move-btn'; mb.textContent='↗'; mb.title='이동';
+    mb.onclick=e=>{ e.stopPropagation(); openMoveModal(sourceId,idx); };
+    div.appendChild(img); div.appendChild(mb);
+    if (!isMobile) {
+      div.addEventListener('dragstart',e=>{ dragInfo={sourceId,photoIdx:idx}; setTimeout(()=>div.classList.add('dragging'),0); e.dataTransfer.effectAllowed='move'; });
+      div.addEventListener('dragend',()=>div.classList.remove('dragging'));
+    }
     container.appendChild(div);
   });
 }
 
 function setupDrop(el, targetId) {
-  el.addEventListener('dragover',  e => { e.preventDefault(); el.classList.add('drop-target'); });
-  el.addEventListener('dragleave', () => el.classList.remove('drop-target'));
-  el.addEventListener('drop', e => {
+  if (isMobile) return; // mobile uses modal only
+  el.addEventListener('dragover', e=>{ e.preventDefault(); el.classList.add('drop-target'); });
+  el.addEventListener('dragleave',()=>el.classList.remove('drop-target'));
+  el.addEventListener('drop',e=>{
     e.preventDefault(); el.classList.remove('drop-target');
-    if (!dragInfo || dragInfo.sourceId === targetId) return;
-    movePhoto(dragInfo.sourceId, targetId, dragInfo.photoIdx);
-    dragInfo = null;
+    if(!dragInfo||dragInfo.sourceId===targetId) return;
+    movePhoto(dragInfo.sourceId,targetId,dragInfo.photoIdx); dragInfo=null;
   });
 }
-
-// Unassigned drop
-(function() {
-  const uc = document.getElementById('unassigned-card');
-  uc.addEventListener('dragover',  e => { e.preventDefault(); uc.classList.add('drop-target'); });
-  uc.addEventListener('dragleave', () => uc.classList.remove('drop-target'));
-  uc.addEventListener('drop', e => {
-    e.preventDefault(); uc.classList.remove('drop-target');
-    if (!dragInfo || dragInfo.sourceId === 'unassigned') return;
-    movePhoto(dragInfo.sourceId, 'unassigned', dragInfo.photoIdx);
-    dragInfo = null;
-  });
+(function(){
+  const uc=document.getElementById('unassigned-card');
+  if(isMobile) return;
+  uc.addEventListener('dragover',e=>{ e.preventDefault(); uc.classList.add('drop-target'); });
+  uc.addEventListener('dragleave',()=>uc.classList.remove('drop-target'));
+  uc.addEventListener('drop',e=>{ e.preventDefault(); uc.classList.remove('drop-target'); if(!dragInfo||dragInfo.sourceId==='unassigned') return; movePhoto(dragInfo.sourceId,'unassigned',dragInfo.photoIdx); dragInfo=null; });
 })();
 
 function movePhoto(fromId, toId, photoIdx) {
-  if (fromId === 'unassigned') unassigned = unassigned.filter(i => i !== photoIdx);
-  else { const g = groups.find(g => g.id === fromId); if (g) g.photoIndices = g.photoIndices.filter(i => i !== photoIdx); }
-  if (toId   === 'unassigned') unassigned.push(photoIdx);
-  else { const g = groups.find(g => g.id === toId);   if (g) g.photoIndices.push(photoIdx); }
+  if(fromId==='unassigned') unassigned=unassigned.filter(i=>i!==photoIdx);
+  else { const g=groups.find(g=>g.id===fromId); if(g) g.photoIndices=g.photoIndices.filter(i=>i!==photoIdx); }
+  if(toId==='unassigned') unassigned.push(photoIdx);
+  else { const g=groups.find(g=>g.id===toId); if(g) g.photoIndices.push(photoIdx); }
   renderAll();
 }
-
 function updateTitle() {
-  const done = groups.reduce((s, g) => s + g.photoIndices.length, 0);
-  document.getElementById('groups-title').textContent =
-    `👶 분류됨 ${done}장 / 전체 ${uploadedFiles.length}장`;
+  const done=groups.reduce((s,g)=>s+g.photoIndices.length,0);
+  document.getElementById('groups-title').textContent=`👶 분류됨 ${done}/${uploadedFiles.length}장`;
 }
+function removeGroup(gi) { unassigned.push(...groups[gi].photoIndices); groups.splice(gi,1); renderAll(); }
+function addGroupManual() { const name=prompt('새 그룹 이름:'); if(!name) return; groups.push({id:'ge'+Date.now(),name,color:COLORS[groups.length%COLORS.length],photoIndices:[],centroid:null}); renderAll(); }
 
-function removeGroup(gi) {
-  unassigned.push(...groups[gi].photoIndices);
-  groups.splice(gi, 1);
-  renderAll();
-}
-
-function addGroupManual() {
-  const name = prompt('새 그룹 이름:'); if (!name) return;
-  groups.push({ id:'ge'+Date.now(), name, color: COLORS[groups.length%COLORS.length], photoIndices:[], centroid:null });
-  renderAll();
-}
-
-/* Move Modal */
+/* ── Move modal ── */
 function openMoveModal(fromId, photoIdx) {
-  const opts = document.getElementById('move-options');
-  opts.innerHTML = '';
-  [{ id:'unassigned', name:'미분류', color:'#EF9F27' }, ...groups]
-    .filter(t => t.id !== fromId)
-    .forEach(t => {
-      const b = document.createElement('button'); b.className = 'move-option';
-      b.style.borderLeft = `4px solid ${t.color}`; b.textContent = t.name;
-      b.onclick = () => { movePhoto(fromId, t.id, photoIdx); closeMoveModal(); showToast('이동 완료!'); };
+  const opts=document.getElementById('move-options'); opts.innerHTML='';
+  [{id:'unassigned',name:'미분류',color:'#EF9F27'},...groups]
+    .filter(t=>t.id!==fromId)
+    .forEach(t=>{
+      const b=document.createElement('button'); b.className='move-option';
+      b.style.borderLeft=`4px solid ${t.color}`; b.textContent=t.name;
+      b.onclick=()=>{ movePhoto(fromId,t.id,photoIdx); closeMoveModal(); showToast('이동 완료!'); };
       opts.appendChild(b);
     });
   document.getElementById('move-modal').classList.add('show');
 }
 function closeMoveModal() { document.getElementById('move-modal').classList.remove('show'); }
+function handleModalOverlayClick(e) { if(e.target===document.getElementById('move-modal')) closeMoveModal(); }
 
-/* ═══════════════════════════════════════
+/* ═══════════════════
    Step 5 — Download
-═══════════════════════════════════════ */
+═══════════════════ */
 function showDownload() {
   setStep(5);
   document.getElementById('section-groups').classList.add('hidden');
   document.getElementById('section-download').classList.remove('hidden');
 
-  const cont = document.getElementById('per-group-download');
-  cont.innerHTML = '';
+  const cont=document.getElementById('per-group-download'); cont.innerHTML='';
+  const allGroups=[
+    ...groups.map((g,i)=>({...g,label:g.name||`그룹${i+1}`,isUnassigned:false})),
+    ...(unassigned.length?[{id:'unassigned',label:'미분류',color:'#EF9F27',photoIndices:unassigned,isUnassigned:true}]:[])
+  ].filter(g=>g.photoIndices.length);
 
-  const allGroups = [
-    ...groups.map((g,i) => ({...g, label: g.name||`그룹${i+1}`, isUnassigned:false})),
-    ...(unassigned.length ? [{id:'unassigned', label:'미분류', color:'#EF9F27', photoIndices:unassigned, isUnassigned:true}] : [])
-  ].filter(g => g.photoIndices.length);
+  allGroups.forEach((g,i)=>{
+    const bd={};
+    g.photoIndices.forEach(idx=>{ const d=getFileDate(uploadedFiles[idx]); (bd[d]=bd[d]||[]).push(uploadedFiles[idx]?.name||''); });
+    let folderHtml=`<div class="f-folder">📁 ${g.label}/</div>`;
+    Object.keys(bd).sort().forEach(date=>{
+      folderHtml+=`<div class="f-folder" style="margin-left:16px">📁 ${date}/</div>`;
+      bd[date].slice(0,3).forEach(n=>folderHtml+=`<div class="f-file">🖼️ ${n}</div>`);
+      if(bd[date].length>3) folderHtml+=`<div class="f-file" style="color:var(--text-muted)">... 외 ${bd[date].length-3}장</div>`;
+    });
 
-  allGroups.forEach((g, i) => {
-    const bd = {};
-    g.photoIndices.forEach(idx => {
-      const d = getFileDate(uploadedFiles[idx]);
-      (bd[d]=bd[d]||[]).push(uploadedFiles[idx]?.name||'');
-    });
-    let folderHtml = `<div class="f-folder">📁 ${g.label}/</div>`;
-    Object.keys(bd).sort().forEach(date => {
-      folderHtml += `<div class="f-folder" style="margin-left:16px">📁 ${date}/</div>`;
-      bd[date].slice(0,3).forEach(n => folderHtml += `<div class="f-file">🖼️ ${n}</div>`);
-      if (bd[date].length > 3) folderHtml += `<div class="f-file" style="color:var(--text-muted)">... 외 ${bd[date].length-3}장</div>`;
-    });
-    const card = document.createElement('div');
-    card.style.cssText = 'background:var(--white);border:1.5px solid var(--gray-border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;';
-    card.innerHTML = `
-      <div style="display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--gray-bg);border-bottom:1px solid var(--gray-border);">
-        <div style="width:36px;height:36px;border-radius:50%;background:${g.color};display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:white;flex-shrink:0;">${g.isUnassigned?'?':i+1}</div>
-        <div style="flex:1;font-size:16px;font-weight:700;color:var(--text);">${g.label} <span style="font-size:13px;font-weight:400;color:var(--text-muted);">(${g.photoIndices.length}장)</span></div>
-        <button data-gid="${g.id}" onclick="downloadZip('single','${g.id}')" style="background:var(--mint);color:white;border:none;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:700;font-family:'Nanum Gothic',sans-serif;cursor:pointer;white-space:nowrap;">⬇️ 따로 저장</button>
+    const card=document.createElement('div');
+    card.style.cssText='background:var(--white);border:1.5px solid var(--gray-border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;';
+
+    // 카카오톡 공유 버튼 (Web Share API)
+    const shareSupported = !!navigator.share;
+    const shareBtn = shareSupported
+      ? `<button class="btn-kakao" onclick="shareGroup('${g.id}')" style="margin-top:10px;width:100%;justify-content:center;">
+           💬 카카오톡으로 공유
+         </button>`
+      : '';
+
+    card.innerHTML=`
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--gray-bg);border-bottom:1px solid var(--gray-border);">
+        <div style="width:34px;height:34px;border-radius:50%;background:${g.color};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:white;flex-shrink:0;">${g.isUnassigned?'?':i+1}</div>
+        <div style="flex:1;font-size:15px;font-weight:700;color:var(--text);">${g.label} <span style="font-size:13px;font-weight:400;color:var(--text-muted);">(${g.photoIndices.length}장)</span></div>
+        <button data-gid="${g.id}" onclick="downloadZip('single','${g.id}')" style="background:var(--mint);color:white;border:none;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;font-family:'Nanum Gothic',sans-serif;cursor:pointer;white-space:nowrap;min-height:44px;">⬇️ ZIP</button>
       </div>
-      <div class="folder-preview" style="margin:0;border-radius:0;border:none;padding:12px 16px;">${folderHtml}</div>`;
+      <div class="folder-preview" style="margin:0;border-radius:0;border:none;padding:10px 14px;">${folderHtml}</div>
+      ${shareBtn ? `<div style="padding:0 14px 14px;">${shareBtn}</div>` : ''}`;
     cont.appendChild(card);
   });
+
+  // iOS 안내: 아이폰만 보이기
+  document.getElementById('ios-guide').style.display = /iPhone|iPad|iPod/.test(navigator.userAgent) ? 'block' : 'none';
 }
 
 function goBackToGroups() {
@@ -733,72 +661,89 @@ function goBackToGroups() {
   document.getElementById('section-groups').classList.remove('hidden');
 }
 
-async function downloadZip(mode, groupId) {
-  let btn = null;
-  if (mode === 'all') {
-    btn = document.querySelector('#section-download .btn-primary');
-  } else {
-    btn = document.querySelector(`[data-gid="${groupId}"]`);
-  }
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ 저장 중...'; }
-
-  const zip = new JSZip();
-  const today = new Date().toLocaleDateString('ko-KR').replace(/\.\s?/g,'-').replace(/-$/,'');
+async function shareGroup(groupId) {
+  const btn = document.querySelector(`[onclick="shareGroup('${groupId}')"]`);
+  if (btn) { btn.disabled=true; btn.textContent='⏳ 준비 중...'; }
   try {
-    if (mode === 'all') {
-      for (let gi = 0; gi < groups.length; gi++) {
-        const g = groups[gi]; const fn = g.name||`그룹${gi+1}`;
-        for (const idx of g.photoIndices) {
-          const f = uploadedFiles[idx]; if (!f) continue;
-          zip.file(`${fn}/${getFileDate(f)}/${f.name.replace(/[^a-zA-Z0-9가-힣._-]/g,'_')}`, await f.arrayBuffer());
-        }
-      }
-      for (const idx of unassigned) {
-        const f = uploadedFiles[idx]; if (!f) continue;
-        zip.file(`미분류/${getFileDate(f)}/${f.name.replace(/[^a-zA-Z0-9가-힣._-]/g,'_')}`, await f.arrayBuffer());
-      }
-      triggerDownload(await zip.generateAsync({type:'blob'}), `어린이집_사진_전체_${today}.zip`);
+    const zip = new JSZip();
+    let label, indices;
+    if (groupId==='unassigned') { indices=unassigned; label='미분류'; }
+    else { const g=groups.find(g=>g.id===groupId); indices=g?.photoIndices||[]; label=g?.name||groupId; }
+
+    for (const idx of indices) {
+      const f=uploadedFiles[idx]; if(!f) continue;
+      zip.file(`${label}/${getFileDate(f)}/${f.name.replace(/[^a-zA-Z0-9가-힣._-]/g,'_')}`, await f.arrayBuffer());
+    }
+    const blob = await zip.generateAsync({type:'blob'});
+    const today = new Date().toLocaleDateString('ko-KR').replace(/\.\s?/g,'-').replace(/-$/,'');
+    const file = new File([blob], `${label}_사진_${today}.zip`, {type:'application/zip'});
+
+    if (navigator.canShare && navigator.canShare({files:[file]})) {
+      await navigator.share({ files:[file], title:`${label} 사진`, text:`${label} 사진 모음이에요` });
     } else {
-      let indices, label;
-      if (groupId === 'unassigned') { indices = unassigned; label = '미분류'; }
-      else { const g = groups.find(g=>g.id===groupId); indices = g?.photoIndices||[]; label = g?.name||groupId; }
-      for (const idx of indices) {
-        const f = uploadedFiles[idx]; if (!f) continue;
-        zip.file(`${label}/${getFileDate(f)}/${f.name.replace(/[^a-zA-Z0-9가-힣._-]/g,'_')}`, await f.arrayBuffer());
+      // fallback: just download
+      triggerDownload(blob, `${label}_사진_${today}.zip`);
+      showToast('공유가 지원되지 않아 다운로드로 저장했어요');
+    }
+  } catch(e) {
+    if (e.name!=='AbortError') showToast('오류: ' + e.message);
+  }
+  if (btn) { btn.disabled=false; btn.textContent='💬 카카오톡으로 공유'; }
+}
+
+async function downloadZip(mode, groupId) {
+  let btn = mode==='all'
+    ? document.querySelector('#section-download .btn-primary')
+    : document.querySelector(`[data-gid="${groupId}"]`);
+  if (btn) { btn.disabled=true; btn.textContent='⏳...'; }
+  const zip=new JSZip();
+  const today=new Date().toLocaleDateString('ko-KR').replace(/\.\s?/g,'-').replace(/-$/,'');
+  try {
+    if (mode==='all') {
+      for (let gi=0;gi<groups.length;gi++) {
+        const g=groups[gi]; const fn=g.name||`그룹${gi+1}`;
+        for (const idx of g.photoIndices) { const f=uploadedFiles[idx]; if(!f) continue; zip.file(`${fn}/${getFileDate(f)}/${f.name.replace(/[^a-zA-Z0-9가-힣._-]/g,'_')}`,await f.arrayBuffer()); }
       }
-      triggerDownload(await zip.generateAsync({type:'blob'}), `${label}_사진_${today}.zip`);
+      for (const idx of unassigned) { const f=uploadedFiles[idx]; if(!f) continue; zip.file(`미분류/${getFileDate(f)}/${f.name.replace(/[^a-zA-Z0-9가-힣._-]/g,'_')}`,await f.arrayBuffer()); }
+      triggerDownload(await zip.generateAsync({type:'blob'}),`어린이집_사진_전체_${today}.zip`);
+    } else {
+      let indices,label;
+      if(groupId==='unassigned'){indices=unassigned;label='미분류';}
+      else{const g=groups.find(g=>g.id===groupId);indices=g?.photoIndices||[];label=g?.name||groupId;}
+      for(const idx of indices){const f=uploadedFiles[idx];if(!f) continue;zip.file(`${label}/${getFileDate(f)}/${f.name.replace(/[^a-zA-Z0-9가-힣._-]/g,'_')}`,await f.arrayBuffer());}
+      triggerDownload(await zip.generateAsync({type:'blob'}),`${label}_사진_${today}.zip`);
     }
     showToast('다운로드 완료! 🎉');
-  } catch(e) { showToast('오류: ' + e.message); }
-  if (btn) { btn.disabled = false; btn.textContent = mode==='all'?'⬇️ 전체 ZIP 다운로드':'⬇️ 따로 저장'; }
+  } catch(e) { showToast('오류: '+e.message); }
+  if(btn){btn.disabled=false;btn.textContent=mode==='all'?'⬇️ 전체 ZIP':'⬇️ ZIP';}
 }
 
 function triggerDownload(blob, filename) {
-  const a = Object.assign(document.createElement('a'), {href:URL.createObjectURL(blob), download:filename});
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(blob),download:filename});
   a.click(); URL.revokeObjectURL(a.href);
 }
 
-/* ═══════════════════════════════════════
-   Utilities
-═══════════════════════════════════════ */
+/* ═══════════════════
+   Utils
+═══════════════════ */
 function getFileDate(file) {
-  if (!file||!file.lastModified) return '날짜미상';
-  const d = new Date(file.lastModified);
+  if(!file||!file.lastModified) return '날짜미상';
+  const d=new Date(file.lastModified);
   return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
 }
 function setStep(n) {
-  for (let i = 1; i <= 5; i++) {
-    const s = document.getElementById(`step${i}`), nm = document.getElementById(`step${i}-num`);
+  for(let i=1;i<=5;i++){
+    const s=document.getElementById(`step${i}`),nm=document.getElementById(`step${i}-num`);
     s.classList.remove('active','done');
-    if (i < n)   { s.classList.add('done');   nm.textContent = '✓'; }
-    else if (i===n){ s.classList.add('active'); nm.textContent = i; }
-    else           {                            nm.textContent = i; }
+    if(i<n){s.classList.add('done');nm.textContent='✓';}
+    else if(i===n){s.classList.add('active');nm.textContent=i;}
+    else{nm.textContent=i;}
   }
 }
 let _tt;
-function showToast(msg) {
-  const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
-  clearTimeout(_tt); _tt = setTimeout(()=>t.classList.remove('show'), 3000);
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),3000);
 }
 </script>
 </body>
