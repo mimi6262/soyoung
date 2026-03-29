@@ -6,139 +6,148 @@
 <title>사진 분류기 - 어린이집 선생님용</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&family=Gaegu:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&family=Gaegu:wght@400;700&display=swap');
+:root {
+  --mint:#5DCAA5; --mint-light:#E1F5EE; --mint-dark:#0F6E56;
+  --coral:#F0997B; --amber:#EF9F27; --amber-light:#FAEEDA;
+  --gray-bg:#F8FAF9; --gray-border:#D8EDE5;
+  --text:#1A2E26; --text-muted:#5C7A6E; --white:#FFFFFF;
+  --radius:16px; --radius-sm:10px;
+  --shadow:0 2px 12px rgba(15,110,86,0.08);
+  --shadow-md:0 4px 24px rgba(15,110,86,0.12);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nanum Gothic',sans-serif;background:var(--gray-bg);color:var(--text);min-height:100vh;}
 
-  :root {
-    --mint: #5DCAA5;
-    --mint-light: #E1F5EE;
-    --mint-dark: #0F6E56;
-    --coral: #F0997B;
-    --coral-light: #FAECE7;
-    --amber: #EF9F27;
-    --amber-light: #FAEEDA;
-    --blue: #378ADD;
-    --blue-light: #E6F1FB;
-    --purple: #7F77DD;
-    --purple-light: #EEEDFE;
-    --gray-bg: #F8FAF9;
-    --gray-border: #D8EDE5;
-    --text: #1A2E26;
-    --text-muted: #5C7A6E;
-    --white: #FFFFFF;
-    --radius: 16px;
-    --radius-sm: 10px;
-    --shadow: 0 2px 12px rgba(15,110,86,0.08);
-    --shadow-md: 0 4px 24px rgba(15,110,86,0.12);
-  }
+/* Header */
+.header{background:var(--white);border-bottom:1.5px solid var(--gray-border);padding:0 2rem;position:sticky;top:0;z-index:100;}
+.header-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px;}
+.logo{display:flex;align-items:center;gap:10px;font-family:'Gaegu',cursive;font-size:22px;font-weight:700;color:var(--mint-dark);}
+.logo-icon{width:36px;height:36px;background:var(--mint-light);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.free-badge{background:var(--mint-light);color:var(--mint-dark);border:1px solid var(--gray-border);border-radius:20px;padding:5px 14px;font-size:13px;font-weight:700;}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Nanum Gothic', sans-serif; background: var(--gray-bg); color: var(--text); min-height: 100vh; }
+/* Main */
+.main{max-width:1100px;margin:0 auto;padding:2rem;}
 
-  .header { background: var(--white); border-bottom: 1.5px solid var(--gray-border); padding: 0 2rem; position: sticky; top: 0; z-index: 100; }
-  .header-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 64px; }
-  .logo { display: flex; align-items: center; gap: 10px; font-family: 'Gaegu', cursive; font-size: 22px; font-weight: 700; color: var(--mint-dark); }
-  .logo-icon { width: 36px; height: 36px; background: var(--mint-light); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-  .free-badge { background: var(--mint-light); color: var(--mint-dark); border: 1px solid var(--gray-border); border-radius: 20px; padding: 5px 14px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+/* Steps */
+.steps{display:flex;margin-bottom:2rem;background:var(--white);border-radius:var(--radius);border:1.5px solid var(--gray-border);overflow:hidden;}
+.step{flex:1;padding:14px 12px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);border-right:1px solid var(--gray-border);transition:background 0.2s;}
+.step:last-child{border-right:none;}
+.step.active{background:var(--mint-light);color:var(--mint-dark);font-weight:700;}
+.step.done{background:#F0FAF6;color:var(--mint-dark);}
+.step-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;background:var(--gray-border);color:var(--text-muted);flex-shrink:0;}
+.step.active .step-num{background:var(--mint);color:white;}
+.step.done .step-num{background:var(--mint-dark);color:white;}
 
-  .main { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+/* Panels */
+.panel{background:var(--white);border:1.5px solid var(--gray-border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;}
+.panel-title{font-family:'Gaegu',cursive;font-size:20px;font-weight:700;color:var(--mint-dark);margin-bottom:4px;}
+.panel-sub{font-size:13px;color:var(--text-muted);margin-bottom:16px;}
 
-  .steps { display: flex; margin-bottom: 2rem; background: var(--white); border-radius: var(--radius); border: 1.5px solid var(--gray-border); overflow: hidden; }
-  .step { flex: 1; padding: 14px 16px; display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-muted); border-right: 1px solid var(--gray-border); transition: background 0.2s; }
-  .step:last-child { border-right: none; }
-  .step.active { background: var(--mint-light); color: var(--mint-dark); font-weight: 700; }
-  .step.done { background: #F0FAF6; color: var(--mint-dark); }
-  .step-num { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; background: var(--gray-border); color: var(--text-muted); flex-shrink: 0; }
-  .step.active .step-num { background: var(--mint); color: white; }
-  .step.done .step-num { background: var(--mint-dark); color: white; font-size: 13px; }
+/* Notice */
+.notice{background:var(--amber-light);border:1.5px solid #FAC775;border-radius:var(--radius-sm);padding:14px 18px;font-size:14px;color:#633806;margin-bottom:1.5rem;display:flex;gap:10px;align-items:flex-start;line-height:1.6;}
 
-  .notice { background: var(--amber-light); border: 1.5px solid #FAC775; border-radius: var(--radius-sm); padding: 14px 18px; font-size: 14px; color: #633806; margin-bottom: 1.5rem; display: flex; gap: 10px; align-items: flex-start; line-height: 1.6; }
-  .notice-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+/* Name tags */
+.name-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;min-height:34px;}
+.name-tag{display:flex;align-items:center;gap:6px;border-radius:20px;padding:5px 12px 5px 14px;font-size:14px;font-weight:700;color:white;}
+.name-tag-remove{background:rgba(255,255,255,0.3);border:none;border-radius:50%;width:18px;height:18px;cursor:pointer;color:white;font-size:11px;display:flex;align-items:center;justify-content:center;}
+.name-input-row{display:flex;gap:8px;}
+.name-input{flex:1;border:1.5px solid var(--gray-border);border-radius:10px;padding:9px 14px;font-size:14px;font-family:'Nanum Gothic',sans-serif;outline:none;}
+.name-input:focus{border-color:var(--mint);}
+.name-add-btn{background:var(--mint);color:white;border:none;border-radius:10px;padding:9px 18px;font-size:14px;font-weight:700;font-family:'Nanum Gothic',sans-serif;cursor:pointer;white-space:nowrap;}
+.name-add-btn:hover{background:var(--mint-dark);}
 
-  .name-panel { background: var(--white); border: 1.5px solid var(--gray-border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; }
-  .panel-title { font-family: 'Gaegu', cursive; font-size: 20px; font-weight: 700; color: var(--mint-dark); margin-bottom: 4px; }
-  .panel-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
-  .name-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; min-height: 34px; }
-  .name-tag { display: flex; align-items: center; gap: 6px; border-radius: 20px; padding: 5px 12px 5px 14px; font-size: 14px; font-weight: 700; color: white; }
-  .name-tag-remove { background: rgba(255,255,255,0.3); border: none; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; color: white; font-size: 11px; display: flex; align-items: center; justify-content: center; }
-  .name-input-row { display: flex; gap: 8px; }
-  .name-input { flex: 1; border: 1.5px solid var(--gray-border); border-radius: 10px; padding: 9px 14px; font-size: 14px; font-family: 'Nanum Gothic', sans-serif; outline: none; }
-  .name-input:focus { border-color: var(--mint); }
-  .name-add-btn { background: var(--mint); color: white; border: none; border-radius: 10px; padding: 9px 18px; font-size: 14px; font-weight: 700; font-family: 'Nanum Gothic', sans-serif; cursor: pointer; white-space: nowrap; }
-  .name-add-btn:hover { background: var(--mint-dark); }
+/* Upload */
+.upload-zone{background:var(--white);border:2.5px dashed var(--gray-border);border-radius:var(--radius);padding:3rem 2rem;text-align:center;transition:border-color 0.2s,background 0.2s;margin-bottom:1.5rem;}
+.upload-zone.dragover{border-color:var(--mint);background:var(--mint-light);}
+.upload-icon{font-size:48px;margin-bottom:12px;}
+.upload-title{font-family:'Gaegu',cursive;font-size:24px;font-weight:700;color:var(--mint-dark);margin-bottom:8px;}
+.upload-sub{font-size:14px;color:var(--text-muted);}
+.upload-btn{display:inline-block;margin-top:16px;background:var(--mint);color:white;border:none;border-radius:10px;padding:10px 24px;font-size:15px;font-family:'Nanum Gothic',sans-serif;font-weight:700;cursor:pointer;}
+.upload-btn:hover{background:var(--mint-dark);}
+.preview-count{background:var(--white);border:1.5px solid var(--gray-border);border-radius:var(--radius);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;}
+.count-text{font-size:15px;font-weight:700;}
+.count-sub{font-size:13px;color:var(--text-muted);}
+.preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-bottom:1.5rem;max-height:260px;overflow-y:auto;padding:4px;}
+.preview-thumb{aspect-ratio:1;border-radius:10px;overflow:hidden;border:2px solid var(--gray-border);}
+.preview-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
 
-  .upload-zone { background: var(--white); border: 2.5px dashed var(--gray-border); border-radius: var(--radius); padding: 3rem 2rem; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; margin-bottom: 1.5rem; }
-  .upload-zone:hover, .upload-zone.dragover { border-color: var(--mint); background: var(--mint-light); }
-  .upload-icon { font-size: 48px; margin-bottom: 12px; }
-  .upload-title { font-family: 'Gaegu', cursive; font-size: 24px; font-weight: 700; color: var(--mint-dark); margin-bottom: 8px; }
-  .upload-sub { font-size: 14px; color: var(--text-muted); }
-  .upload-btn { display: inline-block; margin-top: 16px; background: var(--mint); color: white; border: none; border-radius: 10px; padding: 10px 24px; font-size: 15px; font-family: 'Nanum Gothic', sans-serif; font-weight: 700; cursor: pointer; }
-  .upload-btn:hover { background: var(--mint-dark); }
+/* Buttons */
+.action-row{display:flex;gap:12px;margin-bottom:2rem;flex-wrap:wrap;}
+.btn-primary{background:var(--mint);color:white;border:none;border-radius:12px;padding:14px 28px;font-size:16px;font-weight:700;font-family:'Nanum Gothic',sans-serif;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background 0.2s,transform 0.1s;}
+.btn-primary:hover{background:var(--mint-dark);}
+.btn-primary:active{transform:scale(0.98);}
+.btn-primary:disabled{background:#9DCCBE;cursor:not-allowed;}
+.btn-secondary{background:var(--white);color:var(--text);border:1.5px solid var(--gray-border);border-radius:12px;padding:14px 20px;font-size:15px;font-family:'Nanum Gothic',sans-serif;cursor:pointer;transition:background 0.2s;}
+.btn-secondary:hover{background:var(--gray-bg);}
 
-  .preview-count { background: var(--white); border: 1.5px solid var(--gray-border); border-radius: var(--radius); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
-  .count-text { font-size: 15px; font-weight: 700; color: var(--text); }
-  .count-sub { font-size: 13px; color: var(--text-muted); }
-  .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; margin-bottom: 1.5rem; max-height: 260px; overflow-y: auto; padding: 4px; }
-  .preview-thumb { aspect-ratio: 1; border-radius: 10px; overflow: hidden; border: 2px solid var(--gray-border); }
-  .preview-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Progress */
+.progress-wrap{background:var(--white);border:1.5px solid var(--gray-border);border-radius:var(--radius);padding:2rem;text-align:center;}
+.progress-icon{font-size:48px;margin-bottom:16px;}
+.progress-title{font-family:'Gaegu',cursive;font-size:22px;font-weight:700;color:var(--mint-dark);margin-bottom:8px;}
+.progress-label{font-size:13px;color:var(--text-muted);margin-bottom:12px;}
+.progress-bar-bg{background:var(--gray-border);border-radius:100px;height:8px;overflow:hidden;margin-bottom:8px;}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--mint),var(--mint-dark));border-radius:100px;transition:width 0.4s;width:0%;}
+.progress-detail{font-size:12px;color:var(--text-muted);}
 
-  .action-row { display: flex; gap: 12px; margin-bottom: 2rem; flex-wrap: wrap; }
-  .btn-primary { background: var(--mint); color: white; border: none; border-radius: 12px; padding: 14px 28px; font-size: 16px; font-weight: 700; font-family: 'Nanum Gothic', sans-serif; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s, transform 0.1s; }
-  .btn-primary:hover { background: var(--mint-dark); }
-  .btn-primary:active { transform: scale(0.98); }
-  .btn-primary:disabled { background: #9DCCBE; cursor: not-allowed; }
-  .btn-secondary { background: var(--white); color: var(--text); border: 1.5px solid var(--gray-border); border-radius: 12px; padding: 14px 20px; font-size: 15px; font-family: 'Nanum Gothic', sans-serif; cursor: pointer; transition: background 0.2s; }
-  .btn-secondary:hover { background: var(--gray-bg); }
+/* Groups */
+.groups-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:12px;}
+.groups-title{font-family:'Gaegu',cursive;font-size:22px;font-weight:700;color:var(--mint-dark);}
+.group-card{background:var(--white);border:1.5px solid var(--gray-border);border-radius:var(--radius);margin-bottom:1.5rem;overflow:hidden;transition:box-shadow 0.2s,border-color 0.2s;}
+.group-card:hover{box-shadow:var(--shadow);}
+.group-card.drop-target{border-color:var(--mint);box-shadow:0 0 0 3px rgba(93,202,165,0.25);}
+.group-header{padding:16px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--gray-border);background:var(--mint-light);}
+.group-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Gaegu',cursive;font-size:18px;font-weight:700;color:white;flex-shrink:0;}
+.group-name-input{border:none;background:transparent;font-size:17px;font-weight:700;font-family:'Nanum Gothic',sans-serif;color:var(--mint-dark);outline:none;flex:1;min-width:120px;}
+.group-name-input::placeholder{color:var(--text-muted);}
+.group-meta{font-size:13px;color:var(--text-muted);}
+.date-section{padding:0 16px 8px;}
+.date-label{font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:12px 0 6px;}
+.group-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;}
+.empty-hint{padding:20px;color:var(--text-muted);font-size:13px;text-align:center;}
+.group-photo{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:2px solid transparent;cursor:grab;transition:border-color 0.2s,opacity 0.2s;}
+.group-photo:hover{border-color:var(--coral);}
+.group-photo.dragging{opacity:0.4;cursor:grabbing;}
+.group-photo img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;}
+.move-btn{position:absolute;top:4px;right:4px;background:rgba(255,255,255,0.92);border:none;border-radius:6px;width:22px;height:22px;font-size:12px;cursor:pointer;display:none;align-items:center;justify-content:center;}
+.group-photo:hover .move-btn{display:flex;}
+/* confidence badge */
+.conf-badge{position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,0.55);color:white;font-size:10px;border-radius:4px;padding:2px 5px;pointer-events:none;}
 
-  .groups-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 12px; }
-  .groups-title { font-family: 'Gaegu', cursive; font-size: 22px; font-weight: 700; color: var(--mint-dark); }
+/* Face sample thumbnails in group header */
+.face-samples{display:flex;gap:4px;margin-top:6px;}
+.face-sample{width:32px;height:32px;border-radius:50%;overflow:hidden;border:2px solid rgba(255,255,255,0.8);}
+.face-sample img{width:100%;height:100%;object-fit:cover;display:block;}
 
-  .group-card { background: var(--white); border: 1.5px solid var(--gray-border); border-radius: var(--radius); margin-bottom: 1.5rem; overflow: hidden; transition: box-shadow 0.2s, border-color 0.2s; }
-  .group-card:hover { box-shadow: var(--shadow); }
-  .group-card.drop-target { border-color: var(--mint); box-shadow: 0 0 0 3px rgba(93,202,165,0.25); }
-  .group-header { padding: 16px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--gray-border); background: var(--mint-light); }
-  .group-avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Gaegu', cursive; font-size: 18px; font-weight: 700; color: white; flex-shrink: 0; }
-  .group-name-input { border: none; background: transparent; font-size: 17px; font-weight: 700; font-family: 'Nanum Gothic', sans-serif; color: var(--mint-dark); outline: none; flex: 1; min-width: 120px; }
-  .group-name-input::placeholder { color: var(--text-muted); }
-  .group-meta { font-size: 13px; color: var(--text-muted); }
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--white);border-radius:var(--radius);padding:1.5rem;width:90%;max-width:380px;box-shadow:var(--shadow-md);}
+.modal h3{font-size:17px;margin-bottom:12px;}
+.move-options{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+.move-option{padding:10px 14px;border:1.5px solid var(--gray-border);border-radius:10px;cursor:pointer;font-size:15px;font-family:'Nanum Gothic',sans-serif;background:var(--white);text-align:left;font-weight:700;color:var(--text);transition:background 0.15s;}
+.move-option:hover{background:var(--mint-light);border-color:var(--mint);}
+.btn-cancel-full{width:100%;background:var(--gray-bg);border:1px solid var(--gray-border);border-radius:8px;padding:10px;font-size:14px;cursor:pointer;font-family:'Nanum Gothic',sans-serif;}
 
-  .date-section { padding: 0 16px 8px; }
-  .date-label { font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 0 6px; }
-  .group-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px; }
-  .empty-hint { padding: 20px; color: var(--text-muted); font-size: 13px; text-align: center; }
+/* Download */
+.download-section{background:var(--white);border:1.5px solid var(--gray-border);border-radius:var(--radius);padding:2rem;text-align:center;}
+.download-title{font-family:'Gaegu',cursive;font-size:22px;font-weight:700;color:var(--mint-dark);margin-bottom:8px;}
+.download-sub{font-size:14px;color:var(--text-muted);margin-bottom:20px;}
+.folder-preview{background:var(--gray-bg);border-radius:12px;padding:12px 16px;text-align:left;font-size:13px;font-family:monospace;color:var(--text-muted);line-height:2.2;}
+.f-folder{color:var(--mint-dark);font-weight:700;}
+.f-file{color:var(--text);margin-left:24px;}
 
-  .group-photo { position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; border: 2px solid transparent; cursor: grab; transition: border-color 0.2s, opacity 0.2s; }
-  .group-photo:hover { border-color: var(--coral); }
-  .group-photo.dragging { opacity: 0.4; cursor: grabbing; }
-  .group-photo img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
-  .move-btn { position: absolute; top: 4px; right: 4px; background: rgba(255,255,255,0.92); border: none; border-radius: 6px; width: 22px; height: 22px; font-size: 12px; cursor: pointer; display: none; align-items: center; justify-content: center; }
-  .group-photo:hover .move-btn { display: flex; }
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:white;border-radius:100px;padding:12px 24px;font-size:14px;font-weight:700;z-index:9999;transition:transform 0.3s;pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.hidden{display:none!important;}
 
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; align-items: center; justify-content: center; }
-  .modal-overlay.show { display: flex; }
-  .modal { background: var(--white); border-radius: var(--radius); padding: 1.5rem; width: 90%; max-width: 380px; box-shadow: var(--shadow-md); }
-  .modal h3 { font-size: 17px; margin-bottom: 12px; }
-  .move-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
-  .move-option { padding: 10px 14px; border: 1.5px solid var(--gray-border); border-radius: 10px; cursor: pointer; font-size: 15px; font-family: 'Nanum Gothic', sans-serif; background: var(--white); text-align: left; font-weight: 700; color: var(--text); transition: background 0.15s; }
-  .move-option:hover { background: var(--mint-light); border-color: var(--mint); }
-  .btn-cancel-full { width: 100%; background: var(--gray-bg); border: 1px solid var(--gray-border); border-radius: 8px; padding: 10px; font-size: 14px; cursor: pointer; font-family: 'Nanum Gothic', sans-serif; }
-
-  .download-section { background: var(--white); border: 1.5px solid var(--gray-border); border-radius: var(--radius); padding: 2rem; text-align: center; margin-top: 2rem; }
-  .download-title { font-family: 'Gaegu', cursive; font-size: 22px; font-weight: 700; color: var(--mint-dark); margin-bottom: 8px; }
-  .download-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; }
-  .folder-preview { background: var(--gray-bg); border-radius: 12px; padding: 16px; text-align: left; font-size: 13px; font-family: monospace; color: var(--text-muted); margin-bottom: 20px; line-height: 2.2; }
-  .folder-preview .f-folder { color: var(--mint-dark); font-weight: 700; }
-  .folder-preview .f-file { color: var(--text); margin-left: 24px; }
-
-  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--text); color: white; border-radius: 100px; padding: 12px 24px; font-size: 14px; font-weight: 700; z-index: 9999; transition: transform 0.3s; pointer-events: none; }
-  .toast.show { transform: translateX(-50%) translateY(0); }
-  .hidden { display: none !important; }
-
-  @media (max-width: 600px) {
-    .main { padding: 1rem; }
-    .steps { flex-direction: column; }
-    .step { border-right: none; border-bottom: 1px solid var(--gray-border); }
-    .step:last-child { border-bottom: none; }
-  }
+@media(max-width:600px){
+  .main{padding:1rem;}
+  .steps{flex-direction:column;}
+  .step{border-right:none;border-bottom:1px solid var(--gray-border);}
+  .step:last-child{border-bottom:none;}
+}
 </style>
 </head>
 <body>
@@ -146,7 +155,7 @@
 <div class="header">
   <div class="header-inner">
     <div class="logo"><div class="logo-icon">📸</div>사진 분류기</div>
-    <div class="free-badge">✅ 완전 무료 · API 키 불필요</div>
+    <div class="free-badge">✅ 완전 무료 · 사진 외부 전송 없음</div>
   </div>
 </div>
 
@@ -155,20 +164,20 @@
   <div class="steps">
     <div class="step active" id="step1"><div class="step-num" id="step1-num">1</div><span>이름 등록</span></div>
     <div class="step" id="step2"><div class="step-num" id="step2-num">2</div><span>사진 올리기</span></div>
-    <div class="step" id="step3"><div class="step-num" id="step3-num">3</div><span>드래그 분류</span></div>
-    <div class="step" id="step4"><div class="step-num" id="step4-num">4</div><span>ZIP 저장</span></div>
+    <div class="step" id="step3"><div class="step-num" id="step3-num">3</div><span>AI 분류</span></div>
+    <div class="step" id="step4"><div class="step-num" id="step4-num">4</div><span>수동 조정</span></div>
+    <div class="step" id="step5"><div class="step-num" id="step5-num">5</div><span>ZIP 저장</span></div>
   </div>
 
-  <div class="notice">
-    <div class="notice-icon">💡</div>
-    <div>무료 버전은 <strong>아이 이름을 먼저 등록</strong>하면 그룹이 자동으로 만들어져요. 사진은 <strong>드래그</strong>로 각 아이 그룹에 넣으면 돼요. 날짜별 자동 정리와 ZIP 저장은 그대로예요!</div>
-  </div>
-
-  <!-- Step 1: Name setup -->
+  <!-- Step 1: Names -->
   <div id="section-names">
-    <div class="name-panel">
+    <div class="notice">
+      <span style="font-size:18px;flex-shrink:0;">🤖</span>
+      <div>이름을 먼저 등록하면 AI가 얼굴을 분석해서 <strong>자동으로 아이별로 분류</strong>해줘요. 분류 후 수동 조정도 가능해요. 사진은 브라우저 밖으로 전송되지 않아요.</div>
+    </div>
+    <div class="panel">
       <div class="panel-title">👶 우리 반 아이 이름 등록</div>
-      <div class="panel-sub">이름을 하나씩 추가하면 각 이름별 그룹이 만들어져요</div>
+      <div class="panel-sub">이름 순서대로 등록하면 AI 분류 후 각 이름별 폴더가 만들어져요</div>
       <div class="name-tags" id="name-tags"></div>
       <div class="name-input-row">
         <input class="name-input" id="name-input" placeholder="예: 김민준" maxlength="20" onkeydown="if(event.key==='Enter')addName()">
@@ -193,35 +202,46 @@
       <div class="preview-count">
         <div>
           <div class="count-text" id="count-text">0장</div>
-          <div class="count-sub">아이별 그룹에 드래그해서 분류해요</div>
+          <div class="count-sub">AI가 얼굴을 분석해서 자동으로 아이별로 분류해드릴게요</div>
         </div>
         <button class="btn-secondary" onclick="resetUpload()">다시 선택</button>
       </div>
       <div class="preview-grid" id="preview-grid"></div>
       <div class="action-row">
         <button class="btn-secondary" onclick="backToNames()">← 이름 수정</button>
-        <button class="btn-primary" onclick="goToGroups()">그룹 정리 시작 →</button>
+        <button class="btn-primary" onclick="startAI()">🤖 AI 얼굴 분류 시작</button>
       </div>
     </div>
   </div>
 
-  <!-- Step 3: Groups -->
+  <!-- Step 3: AI Progress -->
+  <div id="section-progress" class="hidden">
+    <div class="progress-wrap">
+      <div class="progress-icon">🤖</div>
+      <div class="progress-title" id="progress-title">얼굴 인식 모델 로딩 중...</div>
+      <div class="progress-label" id="progress-label">잠시만 기다려 주세요 (최초 1회만 다운로드)</div>
+      <div class="progress-bar-bg"><div class="progress-bar" id="progress-bar"></div></div>
+      <div class="progress-detail" id="progress-detail"></div>
+    </div>
+  </div>
+
+  <!-- Step 4: Groups (manual adjust) -->
   <div id="section-groups" class="hidden">
     <div class="groups-header">
-      <div class="groups-title" id="groups-title">👶 드래그로 분류하세요</div>
+      <div class="groups-title" id="groups-title">👶 분류 결과</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn-secondary" onclick="addGroupManual()">+ 그룹 추가</button>
         <button class="btn-primary" onclick="showDownload()">📦 ZIP 저장하기</button>
       </div>
     </div>
 
-    <!-- Unassigned -->
+    <!-- Unassigned pool -->
     <div class="group-card" id="unassigned-card" style="border-color:#FAC775;">
       <div class="group-header" style="background:var(--amber-light);">
         <div class="group-avatar" style="background:var(--amber);">?</div>
         <div style="flex:1">
           <div style="font-size:17px;font-weight:700;color:#633806;">미분류 사진</div>
-          <div class="group-meta" id="unassigned-meta">아래 그룹으로 드래그하세요</div>
+          <div class="group-meta" id="unassigned-meta">분류되지 않은 사진이에요. 아래 그룹으로 드래그하세요.</div>
         </div>
       </div>
       <div class="date-section">
@@ -232,7 +252,7 @@
     <div id="groups-container"></div>
   </div>
 
-  <!-- Step 4: Download -->
+  <!-- Step 5: Download -->
   <div id="section-download" class="hidden">
     <div class="download-section">
       <div class="download-title">📦 저장 준비 완료!</div>
@@ -258,18 +278,27 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- face-api.js -->
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 <script>
+/* ═══════════════════════════════════════
+   State
+═══════════════════════════════════════ */
 let childNames    = [];
 let uploadedFiles = [];
-let groups        = [];
+let groups        = [];   // {id, name, color, photoIndices[], faceDescriptors[]}
 let unassigned    = [];
 let dragInfo      = null;
+let faceResults   = [];   // per-photo: {idx, descriptor, confidence}
 
 const COLORS = ['#5DCAA5','#F0997B','#378ADD','#7F77DD','#EF9F27','#D4537E','#639922','#E24B4A','#1D9E75','#BA7517'];
+const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
 
-/* ── Step 1: Names ── */
+/* ═══════════════════════════════════════
+   Step 1 — Names
+═══════════════════════════════════════ */
 function addName() {
-  const inp  = document.getElementById('name-input');
+  const inp = document.getElementById('name-input');
   const name = inp.value.trim();
   if (!name) return;
   if (childNames.includes(name)) { showToast('이미 있는 이름이에요'); return; }
@@ -287,7 +316,6 @@ function renderNameTags() {
   document.getElementById('goto-upload-btn').disabled = !childNames.length;
 }
 function goToUpload() {
-  if (!childNames.length) return;
   setStep(2);
   document.getElementById('section-names').classList.add('hidden');
   document.getElementById('section-upload').classList.remove('hidden');
@@ -298,7 +326,9 @@ function backToNames() {
   document.getElementById('section-names').classList.remove('hidden');
 }
 
-/* ── Step 2: Upload ── */
+/* ═══════════════════════════════════════
+   Step 2 — Upload
+═══════════════════════════════════════ */
 const dz  = document.getElementById('drop-zone');
 const fin = document.getElementById('file-input');
 const fsb = document.getElementById('file-select-btn');
@@ -306,8 +336,6 @@ const fsb = document.getElementById('file-select-btn');
 dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('dragover'); });
 dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
 dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
-
-// 버튼만 클릭 처리 — stopPropagation으로 드롭존 click 중복 방지
 fsb.addEventListener('click', e => { e.stopPropagation(); fin.click(); });
 fin.addEventListener('change', () => { if (fin.files.length) handleFiles(fin.files); });
 
@@ -330,19 +358,175 @@ function resetUpload() {
   document.getElementById('file-input').value = '';
 }
 
-/* ── Step 3: Groups ── */
-function goToGroups() {
-  if (!uploadedFiles.length) return;
-  groups = childNames.map((name, i) => ({
-    id: 'g' + i, name, color: COLORS[i % COLORS.length], photoIndices: []
-  }));
-  unassigned = uploadedFiles.map((_, i) => i);
+/* ═══════════════════════════════════════
+   Step 3 — AI Face Detection & Clustering
+═══════════════════════════════════════ */
+async function startAI() {
   setStep(3);
   document.getElementById('section-upload').classList.add('hidden');
-  document.getElementById('section-groups').classList.remove('hidden');
-  renderAll();
+  document.getElementById('section-progress').classList.remove('hidden');
+
+  try {
+    // 1. Load models
+    setProgress(5, '얼굴 인식 모델 로딩 중...', '최초 실행 시 약 6MB 다운로드 (이후 캐시됨)');
+    await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+    setProgress(20, '모델 로딩 완료! 얼굴 분석 시작...', '');
+
+    // 2. Detect faces in all photos
+    faceResults = [];
+    const total = uploadedFiles.length;
+    for (let i = 0; i < total; i++) {
+      setProgress(20 + Math.round((i / total) * 60),
+        `얼굴 분석 중... (${i+1}/${total})`,
+        uploadedFiles[i].name);
+
+      const img = await loadImage(uploadedFiles[i]);
+      const detections = await faceapi
+        .detectAllFaces(img, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.4 }))
+        .withFaceLandmarks()
+        .withFaceDescriptors();
+
+      detections.forEach(d => {
+        faceResults.push({
+          photoIdx: i,
+          descriptor: d.descriptor,
+          confidence: d.detection.score
+        });
+      });
+    }
+
+    setProgress(85, '얼굴 군집화 중...', `${faceResults.length}개 얼굴 발견`);
+
+    // 3. Cluster faces → groups
+    const grouped = clusterFaces(faceResults, childNames.length);
+    setProgress(100, '분류 완료!', '');
+
+    setTimeout(() => buildGroups(grouped), 400);
+
+  } catch(err) {
+    console.error(err);
+    document.getElementById('section-progress').classList.add('hidden');
+    document.getElementById('section-upload').classList.remove('hidden');
+    setStep(2);
+    showToast('오류: ' + (err.message || '얼굴 인식 실패'));
+  }
 }
 
+function loadImage(file) {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => res(img);
+    img.onerror = rej;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+function setProgress(pct, title, detail) {
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-title').textContent = title;
+  document.getElementById('progress-detail').textContent = detail;
+}
+
+/* ── Face Clustering ──
+   Greedy nearest-neighbor: assign each face to the closest existing centroid.
+   If distance > threshold, start a new cluster.
+   After initial clustering, merge clusters exceeding the target count.
+*/
+function euclidean(a, b) {
+  let sum = 0;
+  for (let i = 0; i < a.length; i++) sum += (a[i]-b[i])**2;
+  return Math.sqrt(sum);
+}
+
+function clusterFaces(faces, targetCount) {
+  if (!faces.length) return [];
+  const THRESHOLD = 0.5; // face-api recommended ~0.6; stricter = more clusters
+
+  const clusters = []; // [{centroid, faces:[{photoIdx,descriptor,confidence}]}]
+
+  for (const face of faces) {
+    let bestIdx = -1, bestDist = Infinity;
+    clusters.forEach((c, ci) => {
+      const d = euclidean(face.descriptor, c.centroid);
+      if (d < bestDist) { bestDist = d; bestIdx = ci; }
+    });
+
+    if (bestDist < THRESHOLD && bestIdx >= 0) {
+      clusters[bestIdx].faces.push(face);
+      // Update centroid (running average)
+      const n = clusters[bestIdx].faces.length;
+      clusters[bestIdx].centroid = clusters[bestIdx].centroid.map(
+        (v, i) => (v * (n-1) + face.descriptor[i]) / n
+      );
+    } else {
+      clusters.push({ centroid: Array.from(face.descriptor), faces: [face] });
+    }
+  }
+
+  // Sort clusters by size descending
+  clusters.sort((a, b) => b.faces.length - a.faces.length);
+
+  // Merge smallest clusters until count matches targetCount (if we have more clusters than names)
+  while (clusters.length > targetCount && clusters.length > 1) {
+    // Merge last two smallest
+    const last = clusters.pop();
+    const secondLast = clusters[clusters.length - 1];
+    last.faces.forEach(f => secondLast.faces.push(f));
+    // Recompute centroid
+    const n = secondLast.faces.length;
+    secondLast.centroid = secondLast.centroid.map((_, ci) =>
+      secondLast.faces.reduce((s, f) => s + f.descriptor[ci], 0) / n
+    );
+  }
+
+  return clusters;
+}
+
+function buildGroups(clusters) {
+  // Create groups from registered names
+  groups = childNames.map((name, i) => ({
+    id: 'g' + i,
+    name,
+    color: COLORS[i % COLORS.length],
+    photoIndices: [],
+    centroid: clusters[i]?.centroid || null
+  }));
+
+  // Assign photos: each cluster → the matching name group (by order)
+  // For each detected face, assign its photo to the matching group
+  const assigned = new Set();
+  clusters.forEach((cluster, ci) => {
+    const g = groups[ci];
+    if (!g) return;
+    cluster.faces.forEach(face => {
+      if (!assigned.has(face.photoIdx)) {
+        g.photoIndices.push(face.photoIdx);
+        assigned.add(face.photoIdx);
+      }
+    });
+  });
+
+  // Photos with no face detected → unassigned
+  unassigned = uploadedFiles
+    .map((_, i) => i)
+    .filter(i => !assigned.has(i));
+
+  // If more names than clusters, extra groups start empty
+  document.getElementById('section-progress').classList.add('hidden');
+  document.getElementById('section-groups').classList.remove('hidden');
+  setStep(4);
+  renderAll();
+
+  const faceCount = faceResults.length;
+  const noFaceCount = unassigned.length;
+  showToast(`분류 완료! 얼굴 ${faceCount}개 인식 · 미분류 ${noFaceCount}장`);
+}
+
+/* ═══════════════════════════════════════
+   Step 4 — Group Render & Manual Adjust
+═══════════════════════════════════════ */
 function renderAll() {
   renderPool();
   renderGroups();
@@ -351,17 +535,19 @@ function renderAll() {
 
 function renderPool() {
   renderGrid(document.getElementById('unassigned-photos'), unassigned, 'unassigned');
-  document.getElementById('unassigned-meta').textContent =
-    unassigned.length ? `${unassigned.length}장 · 아래 그룹으로 드래그하세요` : '모두 분류 완료 ✅';
+  document.getElementById('unassigned-meta').textContent = unassigned.length
+    ? `${unassigned.length}장 · 얼굴이 감지되지 않았거나 분류가 불확실한 사진이에요`
+    : '모두 분류 완료 ✅';
 }
 
 function renderGroups() {
   const cont = document.getElementById('groups-container');
   cont.innerHTML = '';
+
   groups.forEach((g, gi) => {
     const card = document.createElement('div');
-    card.className     = 'group-card';
-    card.dataset.gid   = g.id;
+    card.className   = 'group-card';
+    card.dataset.gid = g.id;
 
     const byDate = {};
     g.photoIndices.forEach(idx => {
@@ -376,6 +562,12 @@ function renderGroups() {
         }).join('')
       : `<div class="empty-hint">여기로 드래그해 주세요</div>`;
 
+    // Sample face thumbs (first 3 photos)
+    const samples = g.photoIndices.slice(0, 3).map(idx => {
+      const url = URL.createObjectURL(uploadedFiles[idx]);
+      return `<div class="face-sample"><img src="${url}"></div>`;
+    }).join('');
+
     card.innerHTML = `
       <div class="group-header">
         <div class="group-avatar" style="background:${g.color}">${gi+1}</div>
@@ -383,6 +575,7 @@ function renderGroups() {
           <input class="group-name-input" placeholder="이름 입력" value="${g.name}"
             onchange="groups[${gi}].name=this.value;updateTitle()">
           <div class="group-meta">${g.photoIndices.length}장</div>
+          ${samples ? `<div class="face-samples">${samples}</div>` : ''}
         </div>
         <button onclick="removeGroup(${gi})" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-muted);padding:4px 8px;">✕</button>
       </div>${body}`;
@@ -406,10 +599,17 @@ function renderGrid(container, indices, sourceId) {
     div.draggable        = true;
     div.dataset.photoIdx = idx;
     div.dataset.src      = sourceId;
-    const img = document.createElement('img'); img.src = URL.createObjectURL(file);
-    const mb  = document.createElement('button'); mb.className = 'move-btn'; mb.textContent = '↗'; mb.title = '이동';
+
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(file);
+
+    const mb = document.createElement('button');
+    mb.className = 'move-btn'; mb.textContent = '↗'; mb.title = '이동';
     mb.onclick = e => { e.stopPropagation(); openMoveModal(sourceId, idx); };
-    div.appendChild(img); div.appendChild(mb);
+
+    div.appendChild(img);
+    div.appendChild(mb);
+
     div.addEventListener('dragstart', e => {
       dragInfo = { sourceId, photoIdx: idx };
       setTimeout(() => div.classList.add('dragging'), 0);
@@ -431,7 +631,7 @@ function setupDrop(el, targetId) {
   });
 }
 
-// Unassigned card drop
+// Unassigned drop
 (function() {
   const uc = document.getElementById('unassigned-card');
   uc.addEventListener('dragover',  e => { e.preventDefault(); uc.classList.add('drop-target'); });
@@ -447,8 +647,8 @@ function setupDrop(el, targetId) {
 function movePhoto(fromId, toId, photoIdx) {
   if (fromId === 'unassigned') unassigned = unassigned.filter(i => i !== photoIdx);
   else { const g = groups.find(g => g.id === fromId); if (g) g.photoIndices = g.photoIndices.filter(i => i !== photoIdx); }
-  if (toId === 'unassigned') unassigned.push(photoIdx);
-  else { const g = groups.find(g => g.id === toId); if (g) g.photoIndices.push(photoIdx); }
+  if (toId   === 'unassigned') unassigned.push(photoIdx);
+  else { const g = groups.find(g => g.id === toId);   if (g) g.photoIndices.push(photoIdx); }
   renderAll();
 }
 
@@ -466,11 +666,11 @@ function removeGroup(gi) {
 
 function addGroupManual() {
   const name = prompt('새 그룹 이름:'); if (!name) return;
-  groups.push({ id: 'ge'+Date.now(), name, color: COLORS[groups.length%COLORS.length], photoIndices: [] });
+  groups.push({ id:'ge'+Date.now(), name, color: COLORS[groups.length%COLORS.length], photoIndices:[], centroid:null });
   renderAll();
 }
 
-/* ── Move modal ── */
+/* Move Modal */
 function openMoveModal(fromId, photoIdx) {
   const opts = document.getElementById('move-options');
   opts.innerHTML = '';
@@ -486,43 +686,41 @@ function openMoveModal(fromId, photoIdx) {
 }
 function closeMoveModal() { document.getElementById('move-modal').classList.remove('show'); }
 
-/* ── Step 4: Download ── */
+/* ═══════════════════════════════════════
+   Step 5 — Download
+═══════════════════════════════════════ */
 function showDownload() {
-  setStep(4);
+  setStep(5);
   document.getElementById('section-groups').classList.add('hidden');
   document.getElementById('section-download').classList.remove('hidden');
 
-  // 그룹별 카드 렌더링
   const cont = document.getElementById('per-group-download');
   cont.innerHTML = '';
 
-  // 전체 구조 미리보기 + 그룹별 버튼
   const allGroups = [
-    ...groups.map((g, i) => ({ ...g, label: g.name || `그룹${i+1}`, isUnassigned: false })),
-    ...(unassigned.length ? [{ id:'unassigned', label:'미분류', color:'#EF9F27', photoIndices: unassigned, isUnassigned: true }] : [])
+    ...groups.map((g,i) => ({...g, label: g.name||`그룹${i+1}`, isUnassigned:false})),
+    ...(unassigned.length ? [{id:'unassigned', label:'미분류', color:'#EF9F27', photoIndices:unassigned, isUnassigned:true}] : [])
   ].filter(g => g.photoIndices.length);
 
   allGroups.forEach((g, i) => {
     const bd = {};
     g.photoIndices.forEach(idx => {
       const d = getFileDate(uploadedFiles[idx]);
-      (bd[d] = bd[d] || []).push(uploadedFiles[idx]?.name || '');
+      (bd[d]=bd[d]||[]).push(uploadedFiles[idx]?.name||'');
     });
-
     let folderHtml = `<div class="f-folder">📁 ${g.label}/</div>`;
     Object.keys(bd).sort().forEach(date => {
       folderHtml += `<div class="f-folder" style="margin-left:16px">📁 ${date}/</div>`;
       bd[date].slice(0,3).forEach(n => folderHtml += `<div class="f-file">🖼️ ${n}</div>`);
       if (bd[date].length > 3) folderHtml += `<div class="f-file" style="color:var(--text-muted)">... 외 ${bd[date].length-3}장</div>`;
     });
-
     const card = document.createElement('div');
     card.style.cssText = 'background:var(--white);border:1.5px solid var(--gray-border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;';
     card.innerHTML = `
       <div style="display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--gray-bg);border-bottom:1px solid var(--gray-border);">
-        <div style="width:36px;height:36px;border-radius:50%;background:${g.color};display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:white;flex-shrink:0;">${g.isUnassigned ? '?' : i+1}</div>
+        <div style="width:36px;height:36px;border-radius:50%;background:${g.color};display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:white;flex-shrink:0;">${g.isUnassigned?'?':i+1}</div>
         <div style="flex:1;font-size:16px;font-weight:700;color:var(--text);">${g.label} <span style="font-size:13px;font-weight:400;color:var(--text-muted);">(${g.photoIndices.length}장)</span></div>
-        <button onclick="downloadZip('single','${g.id}')" style="background:var(--mint);color:white;border:none;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:700;font-family:'Nanum Gothic',sans-serif;cursor:pointer;white-space:nowrap;">⬇️ 따로 저장</button>
+        <button data-gid="${g.id}" onclick="downloadZip('single','${g.id}')" style="background:var(--mint);color:white;border:none;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:700;font-family:'Nanum Gothic',sans-serif;cursor:pointer;white-space:nowrap;">⬇️ 따로 저장</button>
       </div>
       <div class="folder-preview" style="margin:0;border-radius:0;border:none;padding:12px 16px;">${folderHtml}</div>`;
     cont.appendChild(card);
@@ -530,31 +728,26 @@ function showDownload() {
 }
 
 function goBackToGroups() {
-  setStep(3);
+  setStep(4);
   document.getElementById('section-download').classList.add('hidden');
   document.getElementById('section-groups').classList.remove('hidden');
 }
 
 async function downloadZip(mode, groupId) {
-  // 버튼 찾기 — 전체면 .btn-primary, 그룹별이면 해당 버튼
   let btn = null;
   if (mode === 'all') {
     btn = document.querySelector('#section-download .btn-primary');
   } else {
-    // 클릭된 따로저장 버튼 (이벤트가 없어서 직접 찾기)
-    const btns = document.querySelectorAll('#per-group-download button');
-    btns.forEach(b => { if (b.getAttribute('onclick')?.includes(groupId)) btn = b; });
+    btn = document.querySelector(`[data-gid="${groupId}"]`);
   }
   if (btn) { btn.disabled = true; btn.textContent = '⏳ 저장 중...'; }
 
   const zip = new JSZip();
   const today = new Date().toLocaleDateString('ko-KR').replace(/\.\s?/g,'-').replace(/-$/,'');
-
   try {
     if (mode === 'all') {
-      // 전체: 모든 그룹 + 미분류
       for (let gi = 0; gi < groups.length; gi++) {
-        const g = groups[gi]; const fn = g.name || `그룹${gi+1}`;
+        const g = groups[gi]; const fn = g.name||`그룹${gi+1}`;
         for (const idx of g.photoIndices) {
           const f = uploadedFiles[idx]; if (!f) continue;
           zip.file(`${fn}/${getFileDate(f)}/${f.name.replace(/[^a-zA-Z0-9가-힣._-]/g,'_')}`, await f.arrayBuffer());
@@ -564,52 +757,48 @@ async function downloadZip(mode, groupId) {
         const f = uploadedFiles[idx]; if (!f) continue;
         zip.file(`미분류/${getFileDate(f)}/${f.name.replace(/[^a-zA-Z0-9가-힣._-]/g,'_')}`, await f.arrayBuffer());
       }
-      triggerDownload(await zip.generateAsync({ type:'blob' }), `어린이집_사진_전체_${today}.zip`);
+      triggerDownload(await zip.generateAsync({type:'blob'}), `어린이집_사진_전체_${today}.zip`);
     } else {
-      // 단일 그룹
-      let targetIndices, folderName;
-      if (groupId === 'unassigned') {
-        targetIndices = unassigned; folderName = '미분류';
-      } else {
-        const g = groups.find(g => g.id === groupId);
-        targetIndices = g?.photoIndices || []; folderName = g?.name || groupId;
-      }
-      for (const idx of targetIndices) {
+      let indices, label;
+      if (groupId === 'unassigned') { indices = unassigned; label = '미분류'; }
+      else { const g = groups.find(g=>g.id===groupId); indices = g?.photoIndices||[]; label = g?.name||groupId; }
+      for (const idx of indices) {
         const f = uploadedFiles[idx]; if (!f) continue;
-        zip.file(`${folderName}/${getFileDate(f)}/${f.name.replace(/[^a-zA-Z0-9가-힣._-]/g,'_')}`, await f.arrayBuffer());
+        zip.file(`${label}/${getFileDate(f)}/${f.name.replace(/[^a-zA-Z0-9가-힣._-]/g,'_')}`, await f.arrayBuffer());
       }
-      triggerDownload(await zip.generateAsync({ type:'blob' }), `${folderName}_사진_${today}.zip`);
+      triggerDownload(await zip.generateAsync({type:'blob'}), `${label}_사진_${today}.zip`);
     }
     showToast('다운로드 완료! 🎉');
   } catch(e) { showToast('오류: ' + e.message); }
-
-  if (btn) { btn.disabled = false; btn.textContent = mode === 'all' ? '⬇️ 전체 ZIP 다운로드' : '⬇️ 따로 저장'; }
+  if (btn) { btn.disabled = false; btn.textContent = mode==='all'?'⬇️ 전체 ZIP 다운로드':'⬇️ 따로 저장'; }
 }
 
 function triggerDownload(blob, filename) {
-  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: filename });
+  const a = Object.assign(document.createElement('a'), {href:URL.createObjectURL(blob), download:filename});
   a.click(); URL.revokeObjectURL(a.href);
 }
 
-/* ── Utils ── */
+/* ═══════════════════════════════════════
+   Utilities
+═══════════════════════════════════════ */
 function getFileDate(file) {
-  if (!file || !file.lastModified) return '날짜미상';
+  if (!file||!file.lastModified) return '날짜미상';
   const d = new Date(file.lastModified);
   return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
 }
 function setStep(n) {
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     const s = document.getElementById(`step${i}`), nm = document.getElementById(`step${i}-num`);
     s.classList.remove('active','done');
-    if (i < n)  { s.classList.add('done');   nm.textContent = '✓'; }
+    if (i < n)   { s.classList.add('done');   nm.textContent = '✓'; }
     else if (i===n){ s.classList.add('active'); nm.textContent = i; }
-    else           { nm.textContent = i; }
+    else           {                            nm.textContent = i; }
   }
 }
 let _tt;
 function showToast(msg) {
   const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
-  clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), 2500);
+  clearTimeout(_tt); _tt = setTimeout(()=>t.classList.remove('show'), 3000);
 }
 </script>
 </body>
