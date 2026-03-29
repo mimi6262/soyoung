@@ -56,10 +56,10 @@ body{font-family:'Nanum Gothic',sans-serif;background:var(--gray-bg);color:var(-
 .name-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;min-height:38px;}
 .name-tag{display:flex;align-items:center;gap:6px;border-radius:20px;padding:7px 12px 7px 14px;font-size:14px;font-weight:700;color:white;}
 .name-tag-remove{background:rgba(255,255,255,0.3);border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;color:white;font-size:13px;display:flex;align-items:center;justify-content:center;}
-.name-input-row{display:flex;gap:8px;}
-.name-input{flex:1;border:1.5px solid var(--gray-border);border-radius:10px;padding:11px 14px;font-size:16px;font-family:'Nanum Gothic',sans-serif;outline:none;-webkit-appearance:none;}
+.name-input-row{display:flex;gap:8px;align-items:stretch;}
+.name-input{flex:1;min-width:0;border:1.5px solid var(--gray-border);border-radius:10px;padding:11px 14px;font-size:16px;font-family:'Nanum Gothic',sans-serif;outline:none;-webkit-appearance:none;}
 .name-input:focus{border-color:var(--mint);}
-.name-add-btn{background:var(--mint);color:white;border:none;border-radius:10px;padding:11px 18px;font-size:15px;font-weight:700;font-family:'Nanum Gothic',sans-serif;cursor:pointer;white-space:nowrap;min-width:var(--tap-size);}
+.name-add-btn{flex-shrink:0;background:var(--mint);color:white;border:none;border-radius:10px;padding:11px 16px;font-size:15px;font-weight:700;font-family:'Nanum Gothic',sans-serif;cursor:pointer;white-space:nowrap;min-height:var(--tap-size);}
 
 /* ── Upload zone ── */
 .upload-zone{background:var(--white);border:2.5px dashed var(--gray-border);border-radius:var(--radius);padding:2.5rem 1.5rem;text-align:center;transition:border-color 0.2s,background 0.2s;margin-bottom:1.25rem;}
@@ -478,16 +478,30 @@ function clusterFaces(faces, targetCount) {
 function buildGroups(clusters) {
   groups = childNames.map((name,i)=>({ id:'g'+i, name, color:COLORS[i%COLORS.length], photoIndices:[], centroid:clusters[i]?.centroid||null }));
   const assigned = new Set();
-  clusters.forEach((cluster,ci)=>{
-    const g=groups[ci]; if(!g) return;
-    cluster.faces.forEach(face=>{ if(!assigned.has(face.photoIdx)){g.photoIndices.push(face.photoIdx);assigned.add(face.photoIdx);} });
+
+  // 클러스터가 실제로 존재하는 경우만 매핑
+  // 클러스터 수 < 이름 수인 경우, 남는 이름 그룹은 빈 채로 유지
+  clusters.forEach((cluster, ci) => {
+    const g = groups[ci];
+    if (!g) return; // 이름보다 클러스터가 더 많은 경우 무시
+    cluster.faces.forEach(face => {
+      if (!assigned.has(face.photoIdx)) {
+        g.photoIndices.push(face.photoIdx);
+        assigned.add(face.photoIdx);
+      }
+    });
   });
+
   unassigned = uploadedFiles.map((_,i)=>i).filter(i=>!assigned.has(i));
   document.getElementById('section-progress').classList.add('hidden');
   document.getElementById('section-groups').classList.remove('hidden');
   setStep(4);
   renderAll();
-  showToast(`분류 완료! 얼굴 ${faceResults.length}개 · 미분류 ${unassigned.length}장`);
+  const emptyGroups = groups.filter(g=>g.photoIndices.length===0).length;
+  const msg = emptyGroups > 0
+    ? `분류 완료! · 비어있는 그룹 ${emptyGroups}개는 수동으로 배치해 주세요`
+    : `분류 완료! 얼굴 ${faceResults.length}개 · 미분류 ${unassigned.length}장`;
+  showToast(msg);
 }
 
 /* ═══════════════════
@@ -663,8 +677,10 @@ function goBackToGroups() {
 
 async function shareGroup(groupId) {
   const btn = document.querySelector(`[onclick="shareGroup('${groupId}')"]`);
-  if (btn) { btn.disabled=true; btn.textContent='⏳ 준비 중...'; }
+  if (btn) { btn.disabled=true; btn.textContent='⏳ ZIP 만드는 중...'; }
+
   try {
+    // 1단계: ZIP 먼저 생성
     const zip = new JSZip();
     let label, indices;
     if (groupId==='unassigned') { indices=unassigned; label='미분류'; }
@@ -676,14 +692,17 @@ async function shareGroup(groupId) {
     }
     const blob = await zip.generateAsync({type:'blob'});
     const today = new Date().toLocaleDateString('ko-KR').replace(/\.\s?/g,'-').replace(/-$/,'');
-    const file = new File([blob], `${label}_사진_${today}.zip`, {type:'application/zip'});
+    const fileName = `${label}_사진_${today}.zip`;
 
-    if (navigator.canShare && navigator.canShare({files:[file]})) {
-      await navigator.share({ files:[file], title:`${label} 사진`, text:`${label} 사진 모음이에요` });
+    // 2단계: share는 ZIP 완성 직후 바로 호출 (iOS 제스처 유효 시간 내)
+    const shareFile = new File([blob], fileName, {type:'application/zip'});
+    if (navigator.canShare && navigator.canShare({files:[shareFile]})) {
+      // navigator.share를 await 없이 호출 → 제스처 컨텍스트 유지
+      navigator.share({ files:[shareFile], title:`${label} 사진` })
+        .catch(e => { if(e.name!=='AbortError') triggerDownload(blob, fileName); });
     } else {
-      // fallback: just download
-      triggerDownload(blob, `${label}_사진_${today}.zip`);
-      showToast('공유가 지원되지 않아 다운로드로 저장했어요');
+      triggerDownload(blob, fileName);
+      showToast('공유 미지원 — 다운로드로 저장했어요');
     }
   } catch(e) {
     if (e.name!=='AbortError') showToast('오류: ' + e.message);
