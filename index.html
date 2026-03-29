@@ -145,9 +145,22 @@ body{font-family:'Nanum Gothic',sans-serif;background:var(--gray-bg);color:var(-
 .ios-guide strong{font-weight:700;}
 .ios-guide ol{margin:6px 0 0 16px;}
 
-/* ── Kakao share btn ── */
-.btn-kakao{background:#FEE500;color:#3A1D1D;border:none;border-radius:12px;padding:14px 20px;font-size:15px;font-weight:700;font-family:'Nanum Gothic',sans-serif;cursor:pointer;display:flex;align-items:center;gap:8px;min-height:var(--tap-size);transition:opacity 0.2s;}
-.btn-kakao:active{opacity:0.85;}
+/* ── Photo badges ── */
+.badge{position:absolute;bottom:4px;left:4px;border-radius:4px;padding:2px 5px;font-size:10px;font-weight:700;pointer-events:none;line-height:1.4;}
+.badge-low{background:rgba(239,159,39,0.92);color:#fff;}
+.badge-dup{background:rgba(210,74,74,0.92);color:#fff;}
+
+/* ── Lightbox date edit ── */
+.lightbox-date-row{position:absolute;bottom:calc(40px + env(safe-area-inset-bottom));left:0;right:0;display:flex;align-items:center;justify-content:center;gap:8px;}
+.lightbox-date-input{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.4);border-radius:8px;color:white;font-size:14px;font-family:'Nanum Gothic',sans-serif;padding:6px 10px;outline:none;width:140px;text-align:center;}
+.lightbox-date-input:focus{background:rgba(255,255,255,0.25);}
+.lightbox-date-save{background:var(--mint);border:none;border-radius:8px;color:white;font-size:13px;font-weight:700;font-family:'Nanum Gothic',sans-serif;padding:6px 12px;cursor:pointer;}
+
+/* ── Lightbox ── */position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:2000;align-items:center;justify-content:center;padding:16px;}
+.lightbox.show{display:flex;}
+.lightbox-img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;}
+.lightbox-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:44px;height:44px;color:white;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.lightbox-info{position:absolute;bottom:calc(16px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;color:rgba(255,255,255,0.7);font-size:13px;}
 
 /* ── Toast ── */
 .toast{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:white;border-radius:100px;padding:12px 22px;font-size:14px;font-weight:700;z-index:9999;transition:transform 0.3s;pointer-events:none;white-space:nowrap;}
@@ -195,6 +208,10 @@ body{font-family:'Nanum Gothic',sans-serif;background:var(--gray-bg);color:var(-
     <div class="panel">
       <div class="panel-title">👶 우리 반 아이 이름 등록</div>
       <div class="panel-sub">이름을 추가하면 AI 분류 후 각 이름별 폴더가 생겨요</div>
+      <div id="names-saved-hint" style="display:none;font-size:12px;color:var(--mint-dark);margin-bottom:10px;align-items:center;gap:4px;">
+        ✅ 이전에 등록한 이름이 자동으로 불러와졌어요
+        <button onclick="clearSavedNames()" style="background:none;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;text-decoration:underline;padding:0 4px;">초기화</button>
+      </div>
       <div class="name-tags" id="name-tags"></div>
       <div class="name-input-row">
         <input class="name-input" id="name-input" placeholder="예: 김민준" maxlength="20" onkeydown="if(event.key==='Enter')addName()">
@@ -309,6 +326,17 @@ body{font-family:'Nanum Gothic',sans-serif;background:var(--gray-bg);color:var(-
   </div>
 </div>
 
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="handleLightboxClick(event)">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img class="lightbox-img" id="lightbox-img" src="" alt="">
+  <div class="lightbox-date-row">
+    <input class="lightbox-date-input" id="lightbox-date-input" type="text" placeholder="YYYY.MM.DD">
+    <button class="lightbox-date-save" onclick="saveLightboxDate()">날짜 저장</button>
+  </div>
+  <div class="lightbox-info" id="lightbox-info"></div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
@@ -322,17 +350,56 @@ let groups        = [];
 let unassigned    = [];
 let dragInfo      = null;
 let faceResults   = [];
+let photoMeta     = []; // [{date, confidence, dupOf}] — per uploadedFiles index
+let dupSet        = new Set(); // indices that are duplicates
+
+// ObjectURL 캐시 — 같은 파일에 중복 생성 방지 + 해제 관리
+const urlCache = new Map();
+function getUrl(idx) {
+  if (!urlCache.has(idx)) urlCache.set(idx, URL.createObjectURL(uploadedFiles[idx]));
+  return urlCache.get(idx);
+}
+function clearUrlCache() {
+  urlCache.forEach(url => URL.revokeObjectURL(url));
+  urlCache.clear();
+}
 
 const COLORS = ['#5DCAA5','#F0997B','#378ADD','#7F77DD','#EF9F27','#D4537E','#639922','#E24B4A','#1D9E75','#BA7517'];
 const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
+const LS_NAMES_KEY = 'daycare_child_names';
 
 // Detect mobile
 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 if (isMobile) document.body.classList.add('is-mobile');
 
 /* ═══════════════════
-   Step 1 — Names
+   Step 1 — Names  (+localStorage)
 ═══════════════════ */
+// 앱 시작 시 저장된 이름 불러오기
+(function loadSavedNames() {
+  try {
+    const saved = localStorage.getItem(LS_NAMES_KEY);
+    if (saved) {
+      childNames = JSON.parse(saved);
+      renderNameTags();
+      showSavedHint(true);
+    } else {
+      showSavedHint(false);
+    }
+  } catch(e) { showSavedHint(false); }
+})();
+
+function saveNames() {
+  try { localStorage.setItem(LS_NAMES_KEY, JSON.stringify(childNames)); } catch(e) {}
+}
+function clearSavedNames() {
+  try { localStorage.removeItem(LS_NAMES_KEY); } catch(e) {}
+  childNames = [];
+  renderNameTags();
+  showSavedHint(false);
+  showToast('이름 목록을 초기화했어요');
+}
+
 function addName() {
   const inp = document.getElementById('name-input');
   const name = inp.value.trim();
@@ -340,16 +407,37 @@ function addName() {
   if (childNames.includes(name)) { showToast('이미 있는 이름이에요'); return; }
   childNames.push(name);
   inp.value = '';
+  saveNames();
   renderNameTags();
   if (!isMobile) inp.focus();
 }
-function removeName(n) { childNames = childNames.filter(x => x !== n); renderNameTags(); }
+function removeName(n) {
+  childNames = childNames.filter(x => x !== n);
+  saveNames();
+  renderNameTags();
+}
 function renderNameTags() {
-  document.getElementById('name-tags').innerHTML = childNames.map((n, i) =>
-    `<div class="name-tag" style="background:${COLORS[i%COLORS.length]}">${n}
-      <button class="name-tag-remove" onclick="removeName('${n}')">✕</button>
-    </div>`).join('');
+  const container = document.getElementById('name-tags');
+  container.innerHTML = '';
+  childNames.forEach((n, i) => {
+    const tag = document.createElement('div');
+    tag.className = 'name-tag';
+    tag.style.background = COLORS[i % COLORS.length];
+    tag.textContent = n;
+    const btn = document.createElement('button');
+    btn.className = 'name-tag-remove';
+    btn.textContent = '✕';
+    btn.onclick = () => removeName(n);
+    tag.appendChild(btn);
+    container.appendChild(tag);
+  });
   document.getElementById('goto-upload-btn').disabled = !childNames.length;
+}
+
+// localStorage에서 불러왔을 때만 힌트 표시
+function showSavedHint(show) {
+  const el = document.getElementById('names-saved-hint');
+  if (el) el.style.display = show ? 'flex' : 'none';
 }
 function goToUpload() {
   setStep(2);
@@ -382,15 +470,29 @@ function handleFiles(files) {
   const newFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
   if (!newFiles.length) { showToast('이미지 파일을 선택해주세요'); return; }
   uploadedFiles = [...uploadedFiles, ...newFiles];
+  // photoMeta 초기화 (새 파일 추가분)
+  newFiles.forEach(f => photoMeta.push({ date: null, confidence: null }));
+  detectDuplicates();
   renderPreviewGrid();
   document.getElementById('upload-preview').classList.remove('hidden');
+}
+
+// 파일명 + 크기 기준 중복 감지 (빠른 휴리스틱)
+function detectDuplicates() {
+  dupSet.clear();
+  const seen = new Map(); // "name|size" → first index
+  uploadedFiles.forEach((f, i) => {
+    const key = `${f.name}|${f.size}`;
+    if (seen.has(key)) { dupSet.add(i); }
+    else { seen.set(key, i); }
+  });
 }
 function renderPreviewGrid() {
   const grid = document.getElementById('preview-grid');
   grid.innerHTML = '';
   uploadedFiles.forEach((f, i) => {
     const d = document.createElement('div'); d.className = 'preview-thumb';
-    const img = document.createElement('img'); img.src = URL.createObjectURL(f);
+    const img = document.createElement('img'); img.src = getUrl(i);
     const btn = document.createElement('button'); btn.className = 'remove-btn'; btn.textContent = '✕';
     btn.onclick = e => { e.stopPropagation(); removeUploadedFile(i); };
     d.appendChild(img); d.appendChild(btn); grid.appendChild(d);
@@ -398,9 +500,19 @@ function renderPreviewGrid() {
   document.getElementById('count-text').textContent = `${uploadedFiles.length}장 선택됨`;
   if (!uploadedFiles.length) document.getElementById('upload-preview').classList.add('hidden');
 }
-function removeUploadedFile(idx) { uploadedFiles.splice(idx, 1); renderPreviewGrid(); }
+function removeUploadedFile(idx) {
+  clearUrlCache();
+  uploadedFiles.splice(idx, 1);
+  photoMeta.splice(idx, 1);
+  uploadedFiles.forEach((_, i) => getUrl(i));
+  detectDuplicates();
+  renderPreviewGrid();
+}
 function resetUpload() {
+  clearUrlCache();
   uploadedFiles = [];
+  photoMeta = [];
+  dupSet.clear();
   document.getElementById('upload-preview').classList.add('hidden');
   fin.value = '';
 }
@@ -427,7 +539,12 @@ async function startAI() {
       const detections = await faceapi
         .detectAllFaces(img, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.4 }))
         .withFaceLandmarks().withFaceDescriptors();
-      detections.forEach(d => faceResults.push({ photoIdx:i, descriptor:d.descriptor, confidence:d.detection.score }));
+      detections.forEach(d => {
+        faceResults.push({ photoIdx:i, descriptor:d.descriptor, confidence:d.detection.score });
+        // 가장 높은 confidence만 저장
+        const cur = photoMeta[i]?.confidence ?? 0;
+        if (d.detection.score > cur) photoMeta[i].confidence = d.detection.score;
+      });
     }
     setProgress(85, '얼굴 군집화 중...', `${faceResults.length}개 얼굴 발견`);
     const clustered = clusterFaces(faceResults, childNames.length);
@@ -443,8 +560,11 @@ async function startAI() {
 }
 function loadImage(file) {
   return new Promise((res, rej) => {
-    const img = new Image(); img.onload = ()=>res(img); img.onerror = rej;
-    img.src = URL.createObjectURL(file);
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); res(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('이미지 로드 실패')); };
+    img.src = url;
   });
 }
 function setProgress(pct, title, detail) {
@@ -523,17 +643,16 @@ function renderGroups() {
     const card = document.createElement('div');
     card.className='group-card'; card.dataset.gid=g.id;
     const byDate={};
-    g.photoIndices.forEach(idx=>{ const d=getFileDate(uploadedFiles[idx]); (byDate[d]=byDate[d]||[]).push(idx); });
+    g.photoIndices.forEach(idx=>{ const d=getFileDate(uploadedFiles[idx],idx); (byDate[d]=byDate[d]||[]).push(idx); });
     let body = g.photoIndices.length
       ? Object.keys(byDate).sort().map(date=>{
           const gid=`gd_${g.id}_${date.replace(/\./g,'')}`;
           return `<div class="date-section"><div class="date-label">${date}</div><div class="group-photos" id="${gid}"></div></div>`;
         }).join('')
       : `<div class="empty-hint">↗ 버튼으로 사진을 이동해 주세요</div>`;
-    const samples = g.photoIndices.slice(0,3).map(idx=>{
-      const url=URL.createObjectURL(uploadedFiles[idx]);
-      return `<div class="face-sample"><img src="${url}"></div>`;
-    }).join('');
+    const samples = g.photoIndices.slice(0,3).map(idx =>
+      `<div class="face-sample"><img src="${getUrl(idx)}"></div>`
+    ).join('');
     card.innerHTML=`
       <div class="group-header">
         <div class="group-avatar" style="background:${g.color}">${gi+1}</div>
@@ -559,10 +678,27 @@ function renderGrid(container, indices, sourceId) {
     const file=uploadedFiles[idx]; if(!file) return;
     const div=document.createElement('div');
     div.className='group-photo'; div.draggable=!isMobile;
-    const img=document.createElement('img'); img.src=URL.createObjectURL(file);
+    const img=document.createElement('img'); img.src=getUrl(idx);
     const mb=document.createElement('button'); mb.className='move-btn'; mb.textContent='↗'; mb.title='이동';
     mb.onclick=e=>{ e.stopPropagation(); openMoveModal(sourceId,idx); };
+    div.onclick=e=>{ if(e.target===mb) return; openLightbox(idx); };
     div.appendChild(img); div.appendChild(mb);
+
+    // 중복 뱃지
+    if (dupSet.has(idx)) {
+      const b = document.createElement('span');
+      b.className='badge badge-dup'; b.textContent='복사본';
+      div.appendChild(b);
+    }
+    // 낮은 정확도 뱃지 (confidence < 0.6, AI 분석 후에만)
+    const conf = photoMeta[idx]?.confidence;
+    if (conf !== null && conf !== undefined && conf < 0.6 && !dupSet.has(idx)) {
+      const b = document.createElement('span');
+      b.className='badge badge-low'; b.textContent='?';
+      b.title=`인식 정확도 ${Math.round(conf*100)}%`;
+      div.appendChild(b);
+    }
+
     if (!isMobile) {
       div.addEventListener('dragstart',e=>{ dragInfo={sourceId,photoIdx:idx}; setTimeout(()=>div.classList.add('dragging'),0); e.dataTransfer.effectAllowed='move'; });
       div.addEventListener('dragend',()=>div.classList.remove('dragging'));
@@ -619,6 +755,45 @@ function openMoveModal(fromId, photoIdx) {
 function closeMoveModal() { document.getElementById('move-modal').classList.remove('show'); }
 function handleModalOverlayClick(e) { if(e.target===document.getElementById('move-modal')) closeMoveModal(); }
 
+/* ── Lightbox ── */
+let lightboxCurrentIdx = null;
+
+function openLightbox(photoIdx) {
+  const file = uploadedFiles[photoIdx]; if(!file) return;
+  lightboxCurrentIdx = photoIdx;
+  document.getElementById('lightbox-img').src = getUrl(photoIdx);
+  const currentDate = photoMeta[photoIdx]?.date || getFileDate(file);
+  document.getElementById('lightbox-date-input').value = currentDate;
+  const conf = photoMeta[photoIdx]?.confidence;
+  const confTxt = conf !== null && conf !== undefined ? `  ·  정확도 ${Math.round(conf*100)}%` : '';
+  const dupTxt  = dupSet.has(photoIdx) ? '  ·  ⚠️ 복사본' : '';
+  document.getElementById('lightbox-info').textContent = `${file.name}${confTxt}${dupTxt}`;
+  document.getElementById('lightbox').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function saveLightboxDate() {
+  if (lightboxCurrentIdx === null) return;
+  const val = document.getElementById('lightbox-date-input').value.trim();
+  // YYYY.MM.DD 또는 YYYY-MM-DD 허용
+  if (!/^\d{4}[.\-]\d{2}[.\-]\d{2}$/.test(val)) { showToast('날짜 형식: 2025.03.28'); return; }
+  const normalized = val.replace(/-/g, '.');
+  photoMeta[lightboxCurrentIdx].date = normalized;
+  showToast('날짜가 수정됐어요 ✅');
+  // 그룹 뷰 갱신 (날짜 섹션이 바뀔 수 있으므로)
+  renderAll();
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('show');
+  document.getElementById('lightbox-img').src = '';
+  document.body.style.overflow = '';
+  lightboxCurrentIdx = null;
+}
+function handleLightboxClick(e) {
+  // 이미지/버튼/입력 외 배경 클릭 시 닫기
+  if (e.target === document.getElementById('lightbox')) closeLightbox();
+}
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeLightbox(); });
+
 /* ═══════════════════
    Step 5 — Download
 ═══════════════════ */
@@ -635,38 +810,51 @@ function showDownload() {
 
   allGroups.forEach((g,i)=>{
     const bd={};
-    g.photoIndices.forEach(idx=>{ const d=getFileDate(uploadedFiles[idx]); (bd[d]=bd[d]||[]).push(uploadedFiles[idx]?.name||''); });
-    let folderHtml=`<div class="f-folder">📁 ${g.label}/</div>`;
+    g.photoIndices.forEach(idx=>{ const d=getFileDate(uploadedFiles[idx],idx); (bd[d]=bd[d]||[]).push(uploadedFiles[idx]?.name||''); });
+
+    // 라벨을 HTML에 안전하게 삽입
+    const safeLabel = g.label.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+    let folderHtml=`<div class="f-folder">📁 ${safeLabel}/</div>`;
     Object.keys(bd).sort().forEach(date=>{
       folderHtml+=`<div class="f-folder" style="margin-left:16px">📁 ${date}/</div>`;
-      bd[date].slice(0,3).forEach(n=>folderHtml+=`<div class="f-file">🖼️ ${n}</div>`);
+      bd[date].slice(0,3).forEach(n=>folderHtml+=`<div class="f-file">🖼️ ${n.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`);
       if(bd[date].length>3) folderHtml+=`<div class="f-file" style="color:var(--text-muted)">... 외 ${bd[date].length-3}장</div>`;
     });
 
     const card=document.createElement('div');
     card.style.cssText='background:var(--white);border:1.5px solid var(--gray-border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;';
 
-    // 카카오톡 공유 버튼 (Web Share API)
     const shareSupported = !!navigator.share;
     const shareBtn = shareSupported
-      ? `<button class="btn-kakao" onclick="shareGroup('${g.id}')" style="margin-top:10px;width:100%;justify-content:center;">
-           💬 카카오톡으로 공유
-         </button>`
+      ? `<div style="padding:0 14px 14px;">
+           <button data-share-id="${g.id}" style="background:#FEE500;color:#3A1D1D;border:none;border-radius:12px;padding:12px 16px;font-size:14px;font-weight:700;font-family:'Nanum Gothic',sans-serif;cursor:pointer;width:100%;min-height:44px;">
+             💬 카카오톡으로 공유
+           </button>
+         </div>`
       : '';
 
     card.innerHTML=`
       <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--gray-bg);border-bottom:1px solid var(--gray-border);">
         <div style="width:34px;height:34px;border-radius:50%;background:${g.color};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:white;flex-shrink:0;">${g.isUnassigned?'?':i+1}</div>
-        <div style="flex:1;font-size:15px;font-weight:700;color:var(--text);">${g.label} <span style="font-size:13px;font-weight:400;color:var(--text-muted);">(${g.photoIndices.length}장)</span></div>
+        <div style="flex:1;font-size:15px;font-weight:700;color:var(--text);">${safeLabel} <span style="font-size:13px;font-weight:400;color:var(--text-muted);">(${g.photoIndices.length}장)</span></div>
         <button data-gid="${g.id}" onclick="downloadZip('single','${g.id}')" style="background:var(--mint);color:white;border:none;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;font-family:'Nanum Gothic',sans-serif;cursor:pointer;white-space:nowrap;min-height:44px;">⬇️ ZIP</button>
       </div>
       <div class="folder-preview" style="margin:0;border-radius:0;border:none;padding:10px 14px;">${folderHtml}</div>
-      ${shareBtn ? `<div style="padding:0 14px 14px;">${shareBtn}</div>` : ''}`;
+      ${shareBtn}`;
     cont.appendChild(card);
   });
 
   // iOS 안내: 아이폰만 보이기
   document.getElementById('ios-guide').style.display = /iPhone|iPad|iPod/.test(navigator.userAgent) ? 'block' : 'none';
+
+  // 카카오 공유 버튼 — 이벤트 위임 (중복 방지: 기존 핸들러 제거 후 재등록)
+  if (cont._shareHandler) cont.removeEventListener('click', cont._shareHandler);
+  cont._shareHandler = e => {
+    const btn = e.target.closest('[data-share-id]');
+    if (btn) shareGroup(btn.dataset.shareId, btn);
+  };
+  cont.addEventListener('click', cont._shareHandler);
 }
 
 function goBackToGroups() {
@@ -675,8 +863,7 @@ function goBackToGroups() {
   document.getElementById('section-groups').classList.remove('hidden');
 }
 
-async function shareGroup(groupId) {
-  const btn = document.querySelector(`[onclick="shareGroup('${groupId}')"]`);
+async function shareGroup(groupId, btn) {
   if (btn) { btn.disabled=true; btn.textContent='⏳ ZIP 만드는 중...'; }
 
   try {
@@ -688,7 +875,7 @@ async function shareGroup(groupId) {
 
     for (const idx of indices) {
       const f=uploadedFiles[idx]; if(!f) continue;
-      zip.file(`${label}/${getFileDate(f)}/${f.name.replace(/[^a-zA-Z0-9가-힣._-]/g,'_')}`, await f.arrayBuffer());
+      zip.file(`${label}/${getFileDate(f,idx)}/${f.name.replace(/[^a-zA-Z0-9가-힣._-]/g,'_')}`, await f.arrayBuffer());
     }
     const blob = await zip.generateAsync({type:'blob'});
     const today = new Date().toLocaleDateString('ko-KR').replace(/\.\s?/g,'-').replace(/-$/,'');
@@ -721,15 +908,15 @@ async function downloadZip(mode, groupId) {
     if (mode==='all') {
       for (let gi=0;gi<groups.length;gi++) {
         const g=groups[gi]; const fn=g.name||`그룹${gi+1}`;
-        for (const idx of g.photoIndices) { const f=uploadedFiles[idx]; if(!f) continue; zip.file(`${fn}/${getFileDate(f)}/${f.name.replace(/[^a-zA-Z0-9가-힣._-]/g,'_')}`,await f.arrayBuffer()); }
+        for (const idx of g.photoIndices) { const f=uploadedFiles[idx]; if(!f) continue; zip.file(`${fn}/${getFileDate(f,idx)}/${f.name.replace(/[^a-zA-Z0-9가-힣._-]/g,'_')}`,await f.arrayBuffer()); }
       }
-      for (const idx of unassigned) { const f=uploadedFiles[idx]; if(!f) continue; zip.file(`미분류/${getFileDate(f)}/${f.name.replace(/[^a-zA-Z0-9가-힣._-]/g,'_')}`,await f.arrayBuffer()); }
+      for (const idx of unassigned) { const f=uploadedFiles[idx]; if(!f) continue; zip.file(`미분류/${getFileDate(f,idx)}/${f.name.replace(/[^a-zA-Z0-9가-힣._-]/g,'_')}`,await f.arrayBuffer()); }
       triggerDownload(await zip.generateAsync({type:'blob'}),`어린이집_사진_전체_${today}.zip`);
     } else {
       let indices,label;
       if(groupId==='unassigned'){indices=unassigned;label='미분류';}
       else{const g=groups.find(g=>g.id===groupId);indices=g?.photoIndices||[];label=g?.name||groupId;}
-      for(const idx of indices){const f=uploadedFiles[idx];if(!f) continue;zip.file(`${label}/${getFileDate(f)}/${f.name.replace(/[^a-zA-Z0-9가-힣._-]/g,'_')}`,await f.arrayBuffer());}
+      for(const idx of indices){const f=uploadedFiles[idx];if(!f) continue;zip.file(`${label}/${getFileDate(f,idx)}/${f.name.replace(/[^a-zA-Z0-9가-힣._-]/g,'_')}`,await f.arrayBuffer());}
       triggerDownload(await zip.generateAsync({type:'blob'}),`${label}_사진_${today}.zip`);
     }
     showToast('다운로드 완료! 🎉');
@@ -745,7 +932,9 @@ function triggerDownload(blob, filename) {
 /* ═══════════════════
    Utils
 ═══════════════════ */
-function getFileDate(file) {
+function getFileDate(file, idx) {
+  // 수동으로 날짜가 지정된 경우 우선 사용
+  if (idx !== undefined && photoMeta[idx]?.date) return photoMeta[idx].date;
   if(!file||!file.lastModified) return '날짜미상';
   const d=new Date(file.lastModified);
   return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
